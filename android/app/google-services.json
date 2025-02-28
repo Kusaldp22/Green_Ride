@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "480081869148",
+    "project_id": "greenride-bb957",
+    "storage_bucket": "greenride-bb957.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480081869148:android:63ee1f7e5587bace51a999",
+        "android_client_info": {
+          "package_name": "com.devzz.greenride"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBj-InSITL0bkG-JEJq5rAscDH7taq6sKU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
