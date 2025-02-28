@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:green_ride/authentication/login.dart';
 import 'package:green_ride/global/global_var.dart';
+import 'package:green_ride/methods/common_methods.dart';
 import 'package:green_ride/pages/add_rides.dart';
 import 'package:green_ride/pages/bottom_nav/profile.dart';
 
@@ -74,9 +75,36 @@ class _HomePageState extends State<HomePage> {
       );
       controllerGoogleMap
           ?.animateCamera(CameraUpdate.newCameraPosition(cameraPosition));
+      await getUserInfoAndCheckBlockStatus();
     } catch (e) {
       debugPrint("Error getting location: $e");
     }
+  }
+
+  getUserInfoAndCheckBlockStatus() async {
+    DatabaseReference newUserRef = FirebaseDatabase.instance
+        .ref()
+        .child("users")
+        .child(FirebaseAuth.instance.currentUser!.uid);
+
+    await newUserRef.once().then((snap) {
+      if (snap.snapshot.value != null) {
+        if ((snap.snapshot.value as Map)["blockStatus"] == "unblocked") {
+          setState(() {
+            username = (snap.snapshot.value as Map)["username"];
+          });
+        } else {
+          FirebaseAuth.instance.signOut();
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (context) => const Login()));
+          CommonMethods.showSnackBar("You are blocked", context);
+        }
+      } else {
+        FirebaseAuth.instance.signOut();
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => const Login()));
+      }
+    });
   }
 
   @override

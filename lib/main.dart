@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:green_ride/onboard/onboard_1.dart';
+import 'package:green_ride/authentication/login.dart';
+import 'package:green_ride/pages/bottom_nav/home.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 Future<void> main() async {
@@ -23,11 +25,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Flutter Demo',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData.light().copyWith(
-          scaffoldBackgroundColor: Colors.white,
-        ),
-        home: OnboardScreen1());
+      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.light().copyWith(
+        scaffoldBackgroundColor: Colors.white,
+      ),
+      home: FirebaseAuth.instance.currentUser == null
+          ? const Login()
+          : const HomePage(),
+    );
   }
 }

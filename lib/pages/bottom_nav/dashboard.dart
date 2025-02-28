@@ -14,25 +14,28 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard>
     with SingleTickerProviderStateMixin {
-  late TabController tabController;
+  TabController? tabController;
   int selectedIndex = 0;
 
-  void onBarItemClicked(int i) {
+  onBarItemClicked(int i) {
     setState(() {
       selectedIndex = i;
-      tabController.index = selectedIndex;
+      tabController!.index = selectedIndex;
     });
   }
 
   @override
   void initState() {
+    // TODO: implement initState
     super.initState();
+
     tabController = TabController(length: 4, vsync: this);
   }
 
   @override
   void dispose() {
-    tabController.dispose();
+    // TODO: implement dispose
+    tabController!.dispose();
     super.dispose();
   }
 
@@ -44,39 +47,44 @@ class _DashboardState extends State<Dashboard>
         controller: tabController,
         children: const [
           HomePage(),
-          ProfilePage(),
           Earnings(),
           Trips(),
+          ProfilePage(),
         ],
       ),
+      // Make sure bottomNavigationBar is defined here
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: selectedIndex,
-        onTap: onBarItemClicked,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: "Home",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Profile",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.money),
+            icon: Icon(Icons.credit_card),
             label: "Earnings",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.directions_car),
+            icon: Icon(Icons.account_tree),
             label: "Trips",
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "Profile",
+          ),
         ],
-        unselectedItemColor: Colors.grey,
-        selectedItemColor: Colors.pink,
+        currentIndex: selectedIndex,
+        // Uncomment the backgroundColor
+        backgroundColor:
+            Colors.green.shade300, // Try setting an explicit background color
+        unselectedItemColor: Colors.white,
+        selectedItemColor: Color.fromARGB(255, 6, 96, 199),
         showSelectedLabels: true,
         selectedLabelStyle: const TextStyle(
           fontSize: 12,
         ),
         type: BottomNavigationBarType.fixed,
+        onTap: onBarItemClicked,
+        elevation: 8, // Add elevation to make it more visible
       ),
     );
   }
