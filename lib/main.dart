@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:green_ride/authentication/login.dart';
-import 'package:green_ride/pages/bottom_nav/home.dart';
+import 'package:green_ride/pages/bottom_nav/dashboard.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 Future<void> main() async {
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
       ),
       home: FirebaseAuth.instance.currentUser == null
           ? const Login()
-          : const HomePage(),
+          : const Dashboard(),
     );
   }
 }

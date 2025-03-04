@@ -5,6 +5,7 @@ import 'package:green_ride/authentication/forget_pass.dart';
 import 'package:green_ride/global/global_var.dart';
 import 'package:green_ride/methods/common_methods.dart';
 import 'package:green_ride/onboard/welcome.dart';
+import 'package:green_ride/pages/bottom_nav/dashboard.dart';
 import 'package:green_ride/pages/bottom_nav/home.dart';
 
 class Login extends StatefulWidget {
@@ -93,7 +94,7 @@ class _LoginState extends State<Login> {
 
       username = userData["username"];
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (c) => const HomePage()));
+          context, MaterialPageRoute(builder: (c) => const Dashboard()));
     } on FirebaseAuthException catch (e) {
       CommonMethods.showSnackBar(e.message ?? "Authentication failed", context);
     } catch (e) {

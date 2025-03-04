@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:green_ride/pages/bottom_nav/dashboard.dart';
 import 'package:green_ride/pages/bottom_nav/home.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
@@ -77,7 +78,7 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen>
           context,
           MaterialPageRoute(
               builder: (context) =>
-                  HomePage()), // Replace HomePage() with your actual home screen widget
+                  Dashboard()), // Replace HomePage() with your actual home screen widget
         );
 
         ScaffoldMessenger.of(context).showSnackBar(
