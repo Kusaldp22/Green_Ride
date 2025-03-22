@@ -4,7 +4,6 @@ import 'package:green_ride/pages/bottom_nav/home.dart';
 import 'package:green_ride/pages/bottom_nav/profile.dart';
 import 'package:green_ride/pages/bottom_nav/trips.dart';
 
-
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
 
@@ -47,7 +46,7 @@ class _DashboardState extends State<Dashboard>
         controller: tabController,
         children: const [
           HomePage(),
-          Earnings(),
+          Ratings(),
           Trips(),
           ProfilePage(),
         ],
@@ -61,7 +60,7 @@ class _DashboardState extends State<Dashboard>
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.credit_card),
-            label: "Earnings",
+            label: "Ratings",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_tree),

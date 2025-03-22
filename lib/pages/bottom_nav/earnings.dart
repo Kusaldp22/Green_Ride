@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
-class Earnings extends StatefulWidget {
-  const Earnings({super.key});
+class Ratings extends StatefulWidget {
+  const Ratings({super.key});
 
   @override
-  State<Earnings> createState() => _EarningsState();
+  State<Ratings> createState() => _RatingsState();
 }
 
-class _EarningsState extends State<Earnings> {
+class _RatingsState extends State<Ratings> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
         child: Text(
-          "Earnings",
+          "Ratings",
           style: TextStyle(
             color: Colors.white,
             fontSize: 22,

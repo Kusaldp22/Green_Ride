@@ -29,12 +29,9 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
   Future<void> getCurrentUserId() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      print("Fetched Current User ID: ${user.uid}"); // Debugging output
       setState(() {
         currentUserId = user.uid;
       });
-    } else {
-      print("No user logged in!"); // Debugging output
     }
   }
 
@@ -45,17 +42,29 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
         .where('destination', isEqualTo: widget.destination)
         .get();
 
-    List<RideModel> rides = querySnapshot.docs.map((doc) {
-      final data = doc.data();
-      print("Fetched Ride Data: $data"); // Debugging output
-      return RideModel.fromFirestore(doc);
-    }).toList();
+    return querySnapshot.docs
+        .map((doc) => RideModel.fromFirestore(doc))
+        .toList();
+  }
 
-    for (var ride in rides) {
-      print("Processed Ride ID: ${ride.userId}"); // Debugging output
+  Future<void> joinRide(
+      String rideId, List<String>? joinedUsers, int seats) async {
+    if (currentUserId == null) return;
+
+    joinedUsers ??= []; // Ensure it's not null
+    if (!joinedUsers.contains(currentUserId)) {
+      joinedUsers.add(currentUserId!);
+
+      await FirebaseFirestore.instance
+          .collection('offered_rides')
+          .doc(rideId)
+          .update({
+        'joined_users': joinedUsers,
+      });
+
+      // Fetch updated data
+      setState(() {});
     }
-
-    return rides;
   }
 
   @override
@@ -100,14 +109,17 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
             itemCount: rides.length,
             itemBuilder: (context, index) {
               final ride = rides[index];
+              final joinedUsers = ride.joinedUsers ?? [];
+              final bool isJoined = joinedUsers.contains(currentUserId);
+              final bool isUserRide =
+                  currentUserId != null && ride.userId == currentUserId;
 
-              // Debugging output
-              print("Ride Owner ID: ${ride.userId}, Current User ID: $currentUserId");
-
-              bool isUserRide = currentUserId != null && ride.userId == currentUserId;
+              // Calculate remaining seats
+              num availableSeats = ride.seats - joinedUsers.length;
 
               return Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
                 elevation: 3,
                 margin: const EdgeInsets.symmetric(vertical: 10),
                 child: ListTile(
@@ -120,26 +132,28 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
                         : const AssetImage("assets/images/profile.jpeg"),
                   ),
                   title: Text(ride.carName,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  subtitle: Text('${ride.type} | ${ride.seats} seats | ⭐ ${ride.rating}'),
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                      '${ride.type} | $availableSeats seats left | ⭐ ${ride.rating}'),
 
-                  // Hiding the "Ride Now" button for the ride owner
+                  // Hide "Join Ride" for ride owner
                   trailing: isUserRide
-                      ? const SizedBox.shrink() // Hides the button completely
+                      ? const SizedBox.shrink()
                       : ElevatedButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Ride request sent!')),
-                            );
-                          },
+                          onPressed: isJoined || ride.isFull
+                              ? null
+                              : () =>
+                                  joinRide(ride.id, joinedUsers, ride.seats),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
+                            backgroundColor:
+                                isJoined ? Colors.grey : Colors.green,
                           ),
-                          child: const Text('Ride Now', style: TextStyle(color: Colors.white)),
+                          child: Text(
+                            isJoined ? 'Joined' : 'Join Ride',
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         ),
-                  onTap: () {
-                    // Navigate to ride details or booking page
-                  },
                 ),
               );
             },

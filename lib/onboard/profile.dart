@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:green_ride/pages/bottom_nav/dashboard.dart';
 import 'package:green_ride/pages/face_rec/face_rec.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -70,41 +71,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
-    if (!_formKey.currentState!.validate()) return;
+  if (!_formKey.currentState!.validate()) return;
 
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      DatabaseReference userRef =
-          FirebaseDatabase.instance.ref().child("users").child(user.uid);
+  User? user = FirebaseAuth.instance.currentUser;
+  if (user != null) {
+    DatabaseReference userRef =
+        FirebaseDatabase.instance.ref().child("users").child(user.uid);
 
-      if (_imageFile != null) {
-        _profileImageUrl = await _uploadProfileImage(user.uid);
-      }
-
-      await userRef.update({
-        "username": _nameController.text.trim(),
-        "email": _emailController.text.trim(),
-        "mobile": _mobileController.text.trim(),
-        "studentId": _studentIdController.text.trim(),
-        "vehicleType": _selectedVehicleType,
-        "vehicleNumber": _vehicleNumberController.text.trim(),
-        "profileImage": _profileImageUrl,
-      }).then((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profile updated successfully!")),
-        );
-
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const VerifyIdentityScreen()));
-      }).catchError((error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: ${error.toString()}")),
-        );
-      });
+    if (_imageFile != null) {
+      _profileImageUrl = await _uploadProfileImage(user.uid);
     }
+
+    // Base user data
+    Map<String, dynamic> userData = {
+      "username": _nameController.text.trim(),
+      "email": _emailController.text.trim(),
+      "mobile": _mobileController.text.trim(),
+      "studentId": _studentIdController.text.trim(),
+      "profileImage": _profileImageUrl,
+    };
+
+    bool isVehicleOwner = _selectedVehicleType != null &&
+        _selectedVehicleType!.isNotEmpty; // Ensure it's not null or empty
+
+    // Only add vehicle details if the user owns a vehicle
+    if (isVehicleOwner) {
+      userData["vehicleType"] = _selectedVehicleType;
+      userData["vehicleNumber"] = _vehicleNumberController.text.trim();
+    }
+
+    await userRef.update(userData).then((_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile updated successfully!")),
+      );
+
+      // Ensure widget is mounted before navigating
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => isVehicleOwner ? const Dashboard() : const HomePage(),
+          ),
+        );
+      }
+    }).catchError((error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${error.toString()}")),
+      );
+    });
   }
+}
+
 
   Future<String> _uploadProfileImage(String uid) async {
     Reference storageRef =

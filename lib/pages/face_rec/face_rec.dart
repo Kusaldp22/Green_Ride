@@ -1,3 +1,6 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:green_ride/pages/bottom_nav/dashboard.dart';
 import 'package:green_ride/pages/bottom_nav/home.dart';
@@ -73,20 +76,45 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen>
       );
 
       if (authenticated && mounted) {
-        // Authentication successful, navigate to Home page
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  Dashboard()), // Replace HomePage() with your actual home screen widget
-        );
+        // Get current user ID
+        String userId = FirebaseAuth.instance.currentUser?.uid ?? '';
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Authentication successful!'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (userId.isNotEmpty) {
+          // Reference to the Realtime Database
+          DatabaseReference userRef =
+              FirebaseDatabase.instance.ref().child('users').child(userId);
+
+          // Retrieve user data from Realtime Database
+          DatabaseEvent event = await userRef.once();
+          DataSnapshot snapshot = event.snapshot;
+
+          if (snapshot.exists) {
+            Map<dynamic, dynamic>? userData =
+                snapshot.value as Map<dynamic, dynamic>?;
+
+            bool hasVehicle = userData?['vehicleNumber'] != null && userData?['vehicleNumber'] != '';
+
+
+            // 🔍 Debugging Output
+            print("User Data: $userData");
+            print("Has Vehicle: $hasVehicle");
+
+            // Navigate based on vehicle ownership
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => hasVehicle ? Dashboard() : HomePage(),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('User data not found!'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(

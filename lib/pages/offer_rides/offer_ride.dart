@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:green_ride/pages/bottom_nav/dashboard.dart';
 import 'package:green_ride/pages/bottom_nav/home.dart';
 import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
@@ -111,13 +112,13 @@ class _ShareRideScreenState extends State<ShareRideScreen> {
     if (isStart) {
       setState(() {
         startPointController.text = placeDescription;
-        startLocationSuggestions = []; // Clear suggestions
+        startLocationSuggestions = []; 
         startSessionToken = '';
       });
     } else {
       setState(() {
         destinationController.text = placeDescription;
-        destinationLocationSuggestions = []; // Clear suggestions
+        destinationLocationSuggestions = []; 
         destinationSessionToken = '';
       });
     }
@@ -134,70 +135,64 @@ class _ShareRideScreenState extends State<ShareRideScreen> {
   }
 
   Future<void> addRideToFirestore() async {
-    clearAllSuggestions();
+  clearAllSuggestions();
 
-    if (startPointController.text.isEmpty ||
-        destinationController.text.isEmpty ||
-        selectedCategory == null ||
-        selectedGender == null ||
-        nameController.text.isEmpty ||
-        studentIdController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
-      );
-      return;
-    }
-
-    try {
-      User? user = FirebaseAuth.instance.currentUser;
-      String profileImageUrl = "";
-
-      if (user != null) {
-        DatabaseReference userRef =
-            FirebaseDatabase.instance.ref().child("users").child(user.uid);
-        DatabaseEvent event = await userRef.once();
-
-        if (event.snapshot.value != null) {
-          Map<String, dynamic> userData =
-              Map<String, dynamic>.from(event.snapshot.value as Map);
-          profileImageUrl = userData["profileImage"] ?? "";
-        }
-      }
-
-      await FirebaseFirestore.instance.collection('offered_rides').add({
-        'start_point': startPointController.text,
-        'destination': destinationController.text,
-        'seat_capacity': seatCapacity,
-        'category': selectedCategory,
-        'gender': selectedGender,
-        'name': nameController.text,
-        'student_id': studentIdController.text,
-        'profileImage': profileImageUrl,
-        'user_id': user?.uid,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ride added successfully!')),
-      );
-
-      startPointController.clear();
-      destinationController.clear();
-      nameController.clear();
-      studentIdController.clear();
-      setState(() {
-        seatCapacity = 1;
-        selectedCategory = null;
-        selectedGender = null;
-      });
-
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => HomePage()));
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $e')));
-    }
+  if (startPointController.text.isEmpty || destinationController.text.isEmpty || selectedCategory == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Please fill all required fields')),
+    );
+    return;
   }
+
+  try {
+    User? user = FirebaseAuth.instance.currentUser;
+    String profileImageUrl = "";
+
+    if (user != null) {
+      DatabaseReference userRef = FirebaseDatabase.instance.ref().child("users").child(user.uid);
+      DatabaseEvent event = await userRef.once();
+
+      if (event.snapshot.value != null) {
+        Map<String, dynamic> userData = Map<String, dynamic>.from(event.snapshot.value as Map);
+        profileImageUrl = userData["profileImage"] ?? "";
+      }
+    }
+
+    // Add ride to Firestore
+    await FirebaseFirestore.instance.collection('offered_rides').add({
+      'start_point': startPointController.text,
+      'destination': destinationController.text,
+      'seat_capacity': seatCapacity,
+      'category': selectedCategory,
+      'gender': selectedGender ?? '',  // This will be an empty string if not provided
+      'name': nameController.text.isEmpty ? null : nameController.text,  // Allow null if name not provided
+      'student_id': studentIdController.text.isEmpty ? null : studentIdController.text,  // Allow null if student ID not provided
+      'profileImage': profileImageUrl,
+      'user_id': user?.uid,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Ride added successfully!')),
+    );
+
+    startPointController.clear();
+    destinationController.clear();
+    nameController.clear();
+    studentIdController.clear();
+    setState(() {
+      seatCapacity = 1;
+      selectedCategory = null;
+      selectedGender = null;
+    });
+
+    Navigator.push(
+      context, MaterialPageRoute(builder: (context) => Dashboard()));
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {

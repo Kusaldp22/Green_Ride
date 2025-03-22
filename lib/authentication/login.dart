@@ -7,6 +7,7 @@ import 'package:green_ride/methods/common_methods.dart';
 import 'package:green_ride/onboard/welcome.dart';
 import 'package:green_ride/pages/bottom_nav/dashboard.dart';
 import 'package:green_ride/pages/bottom_nav/home.dart';
+import 'package:green_ride/pages/face_rec/face_rec.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -94,7 +95,7 @@ class _LoginState extends State<Login> {
 
       username = userData["username"];
       Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (c) => const Dashboard()));
+          context, MaterialPageRoute(builder: (c) => const VerifyIdentityScreen()));
     } on FirebaseAuthException catch (e) {
       CommonMethods.showSnackBar(e.message ?? "Authentication failed", context);
     } catch (e) {
