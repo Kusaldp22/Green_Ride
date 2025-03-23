@@ -58,14 +58,13 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
   }
 
   Future<void> _calculateTotalAmount() async {
-    const String apiKey =
-        'AIzaSyBk1wlKR68wI-IDMzsbLPf1YiEZCetZDHU'; // Replace with your API key
+    const String apiKey = 'AIzaSyBk1wlKR68wI-IDMzsbLPf1YiEZCetZDHU';
     const double costPerKm = 40; // Cost per kilometer
 
     try {
       double distanceInKm = await calculateDistance(
-        widget.ride.location, // Start point
-        widget.ride.carName.split(' to ')[1], // Destination
+        widget.ride.location,
+        widget.ride.carName.split(' to ')[1],
         apiKey,
       );
 
