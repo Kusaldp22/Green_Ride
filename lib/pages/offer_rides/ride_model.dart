@@ -10,7 +10,10 @@ class RideModel {
   final String location;
   final String imageUrl;
   final String profileImageUrl;
+  final String vehicleNumber; // Add vehicleNumber field
   final List<String>? joinedUsers; // ✅ Ensure joinedUsers is a List<String>?
+  final String uniId;
+  final String vehicleType;
 
   RideModel({
     required this.id,
@@ -22,7 +25,10 @@ class RideModel {
     required this.location,
     required this.imageUrl,
     required this.profileImageUrl,
+    required this.vehicleNumber, // Add vehicleNumber to constructor
     this.joinedUsers, // Allow null values
+    required this.uniId,
+    required this.vehicleType,
   });
 
   // ✅ Check if the ride is full
@@ -41,7 +47,14 @@ class RideModel {
       location: data['start_point'],
       imageUrl: 'assets/images/bmw.png',
       profileImageUrl: data['profileImage'] ?? '',
-      joinedUsers: (data['joined_users'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [], // ✅ Convert dynamic list to List<String>
+      vehicleNumber:
+          data['vehicle_number'] ?? '', // Add vehicleNumber from Firestore
+      joinedUsers: (data['joined_users'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [], // ✅ Convert dynamic list to List<String>
+      uniId: data['driver_id'] ?? '',
+      vehicleType: data['car_type'] ?? '',
     );
   }
 
@@ -54,7 +67,10 @@ class RideModel {
       'seat_capacity': seats,
       'rating': rating,
       'profileImage': profileImageUrl,
+      'vehicle_number': vehicleNumber, // Add vehicleNumber to Firestore
       'joined_users': joinedUsers ?? [], // Ensure it's always a list
+      'driver_id': uniId,
+      'car_type': vehicleType,
     };
   }
 }

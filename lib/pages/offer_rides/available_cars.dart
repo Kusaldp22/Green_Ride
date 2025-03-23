@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'ride_model.dart';
+import 'package:green_ride/pages/offer_rides/ride_model.dart';
+import 'package:green_ride/pages/payments/confirm.dart'; // Import ConfirmationScreen
 
 class AvailableRidesScreen extends StatefulWidget {
   final String startPoint;
@@ -47,8 +48,8 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
         .toList();
   }
 
-  Future<void> joinRide(
-      String rideId, List<String>? joinedUsers, int seats) async {
+  Future<void> joinRide(String rideId, List<String>? joinedUsers, int seats,
+      RideModel ride) async {
     if (currentUserId == null) return;
 
     joinedUsers ??= []; // Ensure it's not null
@@ -62,8 +63,16 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
         'joined_users': joinedUsers,
       });
 
-      // Fetch updated data
-      setState(() {});
+      // Navigate to Confirmation screen with vehicle number
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ConfirmationScreen(
+            ride: ride,
+            vehicleNumber: ride.vehicleNumber, // Pass vehicleNumber from RideModel
+          ),
+        ),
+      );
     }
   }
 
@@ -143,8 +152,8 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
                       : ElevatedButton(
                           onPressed: isJoined || ride.isFull
                               ? null
-                              : () =>
-                                  joinRide(ride.id, joinedUsers, ride.seats),
+                              : () => joinRide(
+                                  ride.id, joinedUsers, ride.seats, ride),
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
                                 isJoined ? Colors.grey : Colors.green,

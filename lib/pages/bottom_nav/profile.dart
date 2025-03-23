@@ -30,7 +30,7 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _profileImageUrl;
   bool _isLoading = true;
 
-  final List<String> _vehicleTypes = ['Car', 'Motorcycle', 'Bicycle', 'Other'];
+  final List<String> _vehicleTypes = ['Car', 'Motorcycle', 'Jeep', 'Other'];
 
   @override
   void initState() {

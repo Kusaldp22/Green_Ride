@@ -28,7 +28,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? _imageFile;
   String? _profileImageUrl;
 
-  final List<String> _vehicleTypes = ['Car', 'Motorcycle', 'Bicycle', 'Other'];
+  final List<String> _vehicleTypes = ['Car', 'Motorcycle', 'Jeep', 'Other'];
 
   @override
   void initState() {

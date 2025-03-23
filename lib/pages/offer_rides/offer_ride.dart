@@ -19,11 +19,14 @@ class ShareRideScreen extends StatefulWidget {
 class _ShareRideScreenState extends State<ShareRideScreen> {
   int seatCapacity = 1;
   String? selectedCategory;
+  String? _selectedVehicleType;
   String? selectedGender;
+  String? studentId;
   final TextEditingController nameController = TextEditingController();
   final TextEditingController studentIdController = TextEditingController();
   final TextEditingController startPointController = TextEditingController();
   final TextEditingController destinationController = TextEditingController();
+  final TextEditingController _studentIdController = TextEditingController();
 
   // Location autocomplete properties
   var uuid = const Uuid();
@@ -112,13 +115,13 @@ class _ShareRideScreenState extends State<ShareRideScreen> {
     if (isStart) {
       setState(() {
         startPointController.text = placeDescription;
-        startLocationSuggestions = []; 
+        startLocationSuggestions = [];
         startSessionToken = '';
       });
     } else {
       setState(() {
         destinationController.text = placeDescription;
-        destinationLocationSuggestions = []; 
+        destinationLocationSuggestions = [];
         destinationSessionToken = '';
       });
     }
@@ -135,64 +138,90 @@ class _ShareRideScreenState extends State<ShareRideScreen> {
   }
 
   Future<void> addRideToFirestore() async {
-  clearAllSuggestions();
+    clearAllSuggestions();
 
-  if (startPointController.text.isEmpty || destinationController.text.isEmpty || selectedCategory == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please fill all required fields')),
-    );
-    return;
-  }
-
-  try {
-    User? user = FirebaseAuth.instance.currentUser;
-    String profileImageUrl = "";
-
-    if (user != null) {
-      DatabaseReference userRef = FirebaseDatabase.instance.ref().child("users").child(user.uid);
-      DatabaseEvent event = await userRef.once();
-
-      if (event.snapshot.value != null) {
-        Map<String, dynamic> userData = Map<String, dynamic>.from(event.snapshot.value as Map);
-        profileImageUrl = userData["profileImage"] ?? "";
-      }
+    if (startPointController.text.isEmpty ||
+        destinationController.text.isEmpty ||
+        selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all required fields')),
+      );
+      return;
     }
 
-    // Add ride to Firestore
-    await FirebaseFirestore.instance.collection('offered_rides').add({
-      'start_point': startPointController.text,
-      'destination': destinationController.text,
-      'seat_capacity': seatCapacity,
-      'category': selectedCategory,
-      'gender': selectedGender ?? '',  // This will be an empty string if not provided
-      'name': nameController.text.isEmpty ? null : nameController.text,  // Allow null if name not provided
-      'student_id': studentIdController.text.isEmpty ? null : studentIdController.text,  // Allow null if student ID not provided
-      'profileImage': profileImageUrl,
-      'user_id': user?.uid,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+      String profileImageUrl = "";
+      String vehicleNumber = "No Vehicle";
+      String uniId = "";
+      String vehicleType = "";
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Ride added successfully!')),
-    );
+      if (user != null) {
+        // Fetch profile image, vehicle number, and uniId from Realtime Database
+        DatabaseReference userRef =
+            FirebaseDatabase.instance.ref().child("users").child(user.uid);
+        DatabaseEvent event = await userRef.once();
 
-    startPointController.clear();
-    destinationController.clear();
-    nameController.clear();
-    studentIdController.clear();
-    setState(() {
-      seatCapacity = 1;
-      selectedCategory = null;
-      selectedGender = null;
-    });
+        if (event.snapshot.value != null) {
+          Map<String, dynamic> userData =
+              Map<String, dynamic>.from(event.snapshot.value as Map);
+          profileImageUrl = userData["profileImage"] ?? "";
+          vehicleNumber = userData["vehicleNumber"] ?? "No Vehicle";
+          uniId = userData["studentId"] ?? "";
+          vehicleType = userData["vehicleType"] ?? "";
+        }
+      }
 
-    Navigator.push(
-      context, MaterialPageRoute(builder: (context) => Dashboard()));
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      // Add ride to Firestore
+      await FirebaseFirestore.instance.collection('offered_rides').add({
+        'start_point': startPointController.text,
+        'destination': destinationController.text,
+        'seat_capacity': seatCapacity,
+        'category': selectedCategory,
+        'gender': selectedGender ?? '',
+        'name': nameController.text.isEmpty ? null : nameController.text,
+        'profileImage': profileImageUrl,
+        'vehicle_number': vehicleNumber,
+        'driver_id': uniId,
+        'user_id': user?.uid,
+        'student_id':
+            studentIdController.text.isEmpty ? null : studentIdController.text,
+        'car_type': vehicleType,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ride added successfully!')),
+      );
+
+      startPointController.clear();
+      destinationController.clear();
+      nameController.clear();
+      studentIdController.clear();
+      setState(() {
+        seatCapacity = 1;
+        selectedCategory = null;
+        selectedGender = null;
+      });
+
+      if (vehicleType.isNotEmpty || vehicleNumber != "No Vehicle") {
+        // User is a vehicle owner, redirect to Dashboard
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Dashboard()),
+        );
+      } else {
+        // User is not a vehicle owner, redirect to HomePage
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
