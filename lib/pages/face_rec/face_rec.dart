@@ -43,7 +43,6 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen>
 
   Future<void> _initBiometrics() async {
     try {
-      // Request necessary permissions
       await Permission.camera.request();
       await Permission.sensors.request();
 
@@ -51,10 +50,13 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen>
       final isDeviceSupported = await _localAuth.isDeviceSupported();
       final availableBiometrics = await _localAuth.getAvailableBiometrics();
 
-      setState(() {
-        _canCheckBiometrics = canCheck;
-        _availableBiometrics = availableBiometrics;
-      });
+      // ✅ Only call setState if the widget is still in the tree
+      if (mounted) {
+        setState(() {
+          _canCheckBiometrics = canCheck;
+          _availableBiometrics = availableBiometrics;
+        });
+      }
 
       print('Can check biometrics: $canCheck');
       print('Device supported: $isDeviceSupported');
@@ -92,8 +94,8 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen>
             Map<dynamic, dynamic>? userData =
                 snapshot.value as Map<dynamic, dynamic>?;
 
-            bool hasVehicle = userData?['vehicleNumber'] != null && userData?['vehicleNumber'] != '';
-
+            bool hasVehicle = userData?['vehicleNumber'] != null &&
+                userData?['vehicleNumber'] != '';
 
             // 🔍 Debugging Output
             print("User Data: $userData");

@@ -188,6 +188,7 @@ class _ShareRideScreenState extends State<ShareRideScreen> {
             studentIdController.text.isEmpty ? null : studentIdController.text,
         'car_type': vehicleType,
         'timestamp': FieldValue.serverTimestamp(),
+        
       });
 
       ScaffoldMessenger.of(context).showSnackBar(

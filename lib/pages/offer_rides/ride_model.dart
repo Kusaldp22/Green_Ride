@@ -10,10 +10,17 @@ class RideModel {
   final String location;
   final String imageUrl;
   final String profileImageUrl;
-  final String vehicleNumber; // Add vehicleNumber field
-  final List<String>? joinedUsers; // ✅ Ensure joinedUsers is a List<String>?
+  final String vehicleNumber;
+  final List<String>? joinedUsers;
   final String uniId;
   final String vehicleType;
+  final String rideId;
+
+  // ✅ New: Coordinates for Google Maps routing
+  final double startLat;
+  final double startLng;
+  final double endLat;
+  final double endLng;
 
   RideModel({
     required this.id,
@@ -25,10 +32,15 @@ class RideModel {
     required this.location,
     required this.imageUrl,
     required this.profileImageUrl,
-    required this.vehicleNumber, // Add vehicleNumber to constructor
-    this.joinedUsers, // Allow null values
+    required this.vehicleNumber,
+    this.joinedUsers,
     required this.uniId,
     required this.vehicleType,
+    required this.rideId,
+    required this.startLat,
+    required this.startLng,
+    required this.endLat,
+    required this.endLng,
   });
 
   // ✅ Check if the ride is full
@@ -44,17 +56,21 @@ class RideModel {
       type: data['category'] ?? 'Standard',
       seats: data['seat_capacity'] ?? 4,
       rating: (data['rating'] ?? 4.0).toDouble(),
-      location: data['start_point'],
+      location: data['start_point'] ?? '',
       imageUrl: 'assets/images/bmw.png',
       profileImageUrl: data['profileImage'] ?? '',
-      vehicleNumber:
-          data['vehicle_number'] ?? '', // Add vehicleNumber from Firestore
+      vehicleNumber: data['vehicle_number'] ?? '',
       joinedUsers: (data['joined_users'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
-          [], // ✅ Convert dynamic list to List<String>
+          [],
       uniId: data['driver_id'] ?? '',
       vehicleType: data['car_type'] ?? '',
+      rideId: doc.id,
+      startLat: (data['start_lat'] ?? 0).toDouble(),
+      startLng: (data['start_lng'] ?? 0).toDouble(),
+      endLat: (data['end_lat'] ?? 0).toDouble(),
+      endLng: (data['end_lng'] ?? 0).toDouble(),
     );
   }
 
@@ -67,10 +83,15 @@ class RideModel {
       'seat_capacity': seats,
       'rating': rating,
       'profileImage': profileImageUrl,
-      'vehicle_number': vehicleNumber, // Add vehicleNumber to Firestore
-      'joined_users': joinedUsers ?? [], // Ensure it's always a list
+      'vehicle_number': vehicleNumber,
+      'joined_users': joinedUsers ?? [],
       'driver_id': uniId,
       'car_type': vehicleType,
+      'ride_id': rideId,
+      'start_lat': startLat,
+      'start_lng': startLng,
+      'end_lat': endLat,
+      'end_lng': endLng,
     };
   }
 }

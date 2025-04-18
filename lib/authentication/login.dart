@@ -5,8 +5,6 @@ import 'package:green_ride/authentication/forget_pass.dart';
 import 'package:green_ride/global/global_var.dart';
 import 'package:green_ride/methods/common_methods.dart';
 import 'package:green_ride/onboard/welcome.dart';
-import 'package:green_ride/pages/bottom_nav/dashboard.dart';
-import 'package:green_ride/pages/bottom_nav/home.dart';
 import 'package:green_ride/pages/face_rec/face_rec.dart';
 
 class Login extends StatefulWidget {

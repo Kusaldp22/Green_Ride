@@ -103,12 +103,7 @@ class _TripsState extends State<Trips> {
                         // Show "Ride Now" button only if all seats are booked
                         trailing: allSeatsFilled
                             ? ElevatedButton(
-                                onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text('Ride started!')),
-                                  );
-                                },
+                                onPressed: () {},
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green,
                                 ),

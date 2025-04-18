@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:green_ride/pages/offer_rides/ride_model.dart';
-import 'package:green_ride/pages/payments/confirm.dart'; // Import ConfirmationScreen
+import 'package:green_ride/pages/payments/confirm.dart';
+import 'package:green_ride/pages/waiting_screen.dart'; // Import ConfirmationScreen
 
 class AvailableRidesScreen extends StatefulWidget {
   final String startPoint;
@@ -69,7 +70,8 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
         MaterialPageRoute(
           builder: (context) => ConfirmationScreen(
             ride: ride,
-            vehicleNumber: ride.vehicleNumber, // Pass vehicleNumber from RideModel
+            vehicleNumber:
+                ride.vehicleNumber, // Pass vehicleNumber from RideModel
           ),
         ),
       );
@@ -149,20 +151,36 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
                   // Hide "Join Ride" for ride owner
                   trailing: isUserRide
                       ? const SizedBox.shrink()
-                      : ElevatedButton(
-                          onPressed: isJoined || ride.isFull
-                              ? null
-                              : () => joinRide(
-                                  ride.id, joinedUsers, ride.seats, ride),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                isJoined ? Colors.grey : Colors.green,
-                          ),
-                          child: Text(
-                            isJoined ? 'Joined' : 'Join Ride',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
+                      : isJoined
+                          ? ElevatedButton.icon(
+                              onPressed: () {
+                                // Navigate to map screen
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        RideMapScreen(ride: ride),
+                                  ),
+                                );
+                              },
+                              icon: Icon(Icons.map),
+                              label: Text('View Map'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                              ),
+                            )
+                          : ElevatedButton(
+                              onPressed: ride.isFull
+                                  ? null
+                                  : () => joinRide(
+                                      ride.id, joinedUsers, ride.seats, ride),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('Join Ride'),
+                            ),
                 ),
               );
             },
