@@ -44,11 +44,11 @@ class _DashboardState extends State<Dashboard>
       body: TabBarView(
         physics: const NeverScrollableScrollPhysics(),
         controller: tabController,
-        children: const [
-          HomePage(),
+        children: [
+          const HomePage(),
           Ratings(),
-          Trips(),
-          ProfilePage(),
+          const Trips(),
+          const ProfilePage(),
         ],
       ),
       // Make sure bottomNavigationBar is defined here

@@ -69,7 +69,7 @@ class _RatingScreenState extends State<RatingScreen>
       ),
     );
 
-    _fetchDriverProfile(); // Call this to fetch driver data
+    _fetchDriverProfile();
   }
 
   Future<void> _fetchDriverProfile() async {
@@ -91,6 +91,28 @@ class _RatingScreenState extends State<RatingScreen>
       }
     } catch (e) {
       debugPrint("Error fetching driver profile: $e");
+    }
+  }
+
+  Future<Map<String, String?>> _getCurrentUserData(String uid) async {
+    try {
+      final ref = FirebaseDatabase.instance.ref('users/$uid');
+      final snapshot = await ref.once();
+      final data = snapshot.snapshot.value as Map<dynamic, dynamic>?;
+
+      final username = data?['username']?.toString();
+      final profileImage = data?['profileImage']?.toString();
+
+      return {
+        'username': username,
+        'profileImage': profileImage,
+      };
+    } catch (e) {
+      debugPrint("Error fetching current user data: $e");
+      return {
+        'username': null,
+        'profileImage': null,
+      };
     }
   }
 
@@ -122,10 +144,8 @@ class _RatingScreenState extends State<RatingScreen>
     }
 
     try {
-      // Get current user (if using Firebase Auth)
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
-        // Handle case where user is not logged in
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('You must be logged in to submit a rating')),
@@ -133,24 +153,23 @@ class _RatingScreenState extends State<RatingScreen>
         return;
       }
 
-      // Combine selected compliments and custom compliment
       final List<String> allCompliments = List.from(_selectedCompliments);
       if (_complimentController.text.isNotEmpty) {
         allCompliments.add(_complimentController.text);
       }
+      final raterData = await _getCurrentUserData(currentUser.uid);
 
-      // Create a document in Firestore
       await FirebaseFirestore.instance.collection('ratings').add({
-        'driverId': widget.driverUid, // The driver being rated
-        'raterId': currentUser.uid, // The user submitting the rating
-        'rating': _rating, // The star rating (1-5)
-        'compliments': allCompliments, // List of compliments
-        'timestamp':
-            FieldValue.serverTimestamp(), // When the rating was submitted
-        'driverName': _username, // Driver's name for easier queries
+        'driverId': widget.driverUid,
+        'raterId': currentUser.uid,
+        'raterName': raterData['username'] ?? 'Anonymous',
+        'raterImage': raterData['profileImage'] ?? '',
+        'rating': _rating,
+        'compliments': allCompliments,
+        'driverName': _username,
+        'timestamp': FieldValue.serverTimestamp(),
       });
 
-      // Show success dialog
       _showSuccessDialog();
     } catch (e) {
       debugPrint('Error submitting rating: $e');

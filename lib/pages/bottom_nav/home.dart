@@ -9,6 +9,7 @@ import 'package:green_ride/global/global_var.dart';
 import 'package:green_ride/methods/common_methods.dart';
 import 'package:green_ride/pages/add_rides.dart';
 import 'package:green_ride/pages/bottom_nav/profile.dart';
+import 'package:green_ride/pages/offer_rides/available_cars.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -133,7 +134,8 @@ class _HomePageState extends State<HomePage> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: Color.fromARGB(255, 6, 96, 199), // Border color
+                              color: Color.fromARGB(
+                                  255, 6, 96, 199), // Border color
                               width: 3, // Border width
                             ),
                           ),
@@ -227,6 +229,25 @@ class _HomePageState extends State<HomePage> {
                 ),
                 ListTile(
                   leading: const Icon(
+                    Icons.taxi_alert,
+                    color: Colors.grey,
+                  ),
+                  title: const Text(
+                    "Trips",
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  onTap: () {
+                    Navigator.push(context,
+                        MaterialPageRoute(builder: (context) {
+                      return AvailableRidesScreen(
+                        startPoint: '',
+                        destination: '',
+                      );
+                    }));
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
                     Icons.person,
                     color: Colors.grey,
                   ),
@@ -242,7 +263,7 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
                 const SizedBox(
-                  height: 350,
+                  height: 270,
                 ),
                 ListTile(
                   leading: const Icon(
@@ -251,7 +272,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                   title: const Text(
                     "LogOut",
-                    style: TextStyle(color: Colors.green,fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                        color: Colors.green, fontWeight: FontWeight.w500),
                   ),
                   onTap: () {
                     FirebaseAuth.instance.signOut();
