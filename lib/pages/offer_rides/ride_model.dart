@@ -15,12 +15,7 @@ class RideModel {
   final String uniId;
   final String vehicleType;
   final String rideId;
-
-  // ✅ New: Coordinates for Google Maps routing
-  final double startLat;
-  final double startLng;
-  final double endLat;
-  final double endLng;
+  String status; // <-- ✅ NEW FIELD
 
   RideModel({
     required this.id,
@@ -37,13 +32,9 @@ class RideModel {
     required this.uniId,
     required this.vehicleType,
     required this.rideId,
-    required this.startLat,
-    required this.startLng,
-    required this.endLat,
-    required this.endLng,
+    this.status = 'pending', // <-- ✅ Default status
   });
 
-  // ✅ Check if the ride is full
   bool get isFull => (joinedUsers?.length ?? 0) >= seats;
 
   factory RideModel.fromFirestore(DocumentSnapshot doc) {
@@ -67,10 +58,7 @@ class RideModel {
       uniId: data['driver_id'] ?? '',
       vehicleType: data['car_type'] ?? '',
       rideId: doc.id,
-      startLat: (data['start_lat'] ?? 0).toDouble(),
-      startLng: (data['start_lng'] ?? 0).toDouble(),
-      endLat: (data['end_lat'] ?? 0).toDouble(),
-      endLng: (data['end_lng'] ?? 0).toDouble(),
+      status: data['status'] ?? 'pending', // <-- ✅ Firestore status field
     );
   }
 
@@ -88,10 +76,7 @@ class RideModel {
       'driver_id': uniId,
       'car_type': vehicleType,
       'ride_id': rideId,
-      'start_lat': startLat,
-      'start_lng': startLng,
-      'end_lat': endLat,
-      'end_lng': endLng,
+      'status': status, // <-- ✅ Include status in Firestore
     };
   }
 }

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:green_ride/pages/offer_rides/ride_model.dart';
+import 'package:green_ride/dropoff.dart' as dropoff;
+import 'package:green_ride/pages/offer_rides/ride_model.dart' as ride_model;
 import 'package:green_ride/splash_screen.dart';
 
 class Trips extends StatefulWidget {
@@ -29,7 +30,7 @@ class _TripsState extends State<Trips> {
     }
   }
 
-  Future<List<RideModel>> fetchMyOfferedRides() async {
+  Future<List<ride_model.RideModel>> fetchMyOfferedRides() async {
     if (currentUserId == null) return [];
 
     final querySnapshot = await FirebaseFirestore.instance
@@ -38,7 +39,7 @@ class _TripsState extends State<Trips> {
         .get();
 
     return querySnapshot.docs
-        .map((doc) => RideModel.fromFirestore(doc))
+        .map((doc) => ride_model.RideModel.fromFirestore(doc))
         .toList();
   }
 
@@ -48,7 +49,6 @@ class _TripsState extends State<Trips> {
       body: SafeArea(
         child: Column(
           children: [
-            // Title Bar without back button
             const Padding(
               padding: EdgeInsets.all(16.0),
               child: Row(
@@ -64,10 +64,8 @@ class _TripsState extends State<Trips> {
                 ],
               ),
             ),
-
-            // Ride List
             Expanded(
-              child: FutureBuilder<List<RideModel>>(
+              child: FutureBuilder<List<ride_model.RideModel>>(
                 future: fetchMyOfferedRides(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -107,7 +105,6 @@ class _TripsState extends State<Trips> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Driver Avatar
                             ClipOval(
                               child: Image.network(
                                 ride.profileImageUrl.isNotEmpty
@@ -119,8 +116,6 @@ class _TripsState extends State<Trips> {
                               ),
                             ),
                             const SizedBox(width: 12),
-
-                            // Ride Info
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,21 +134,54 @@ class _TripsState extends State<Trips> {
                                   ),
                                   const SizedBox(height: 8),
                                   allSeatsFilled
-                                      ? ElevatedButton(
-                                          onPressed: () {
-                                            // TODO: Handle Ride Now
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                const Color.fromARGB(
-                                                    255, 6, 96, 199),
-                                          ),
-                                          child: const Text(
-                                            'Ride Now',
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                        )
+                                      ? ride.status == 'completed'
+                                          ? const Text(
+                                              'Completed',
+                                              style: TextStyle(
+                                                color: Colors.red,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            )
+                                          : ElevatedButton(
+                                              onPressed: () async {
+                                                final result =
+                                                    await Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        dropoff.DropoffScreen(
+                                                            ride: ride),
+                                                  ),
+                                                );
+
+                                                if (result == true) {
+                                                  setState(() {
+                                                    ride.status = 'completed';
+                                                  });
+
+                                                  // Update in Firestore
+                                                  await FirebaseFirestore
+                                                      .instance
+                                                      .collection(
+                                                          'offered_rides')
+                                                      .doc(ride.id)
+                                                      .update({
+                                                    'status': 'completed',
+                                                  });
+                                                }
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    const Color.fromARGB(
+                                                        255, 6, 96, 199),
+                                              ),
+                                              child: const Text(
+                                                'Ride Now',
+                                                style: TextStyle(
+                                                    color: Colors.white),
+                                              ),
+                                            )
                                       : const Text(
                                           "Waiting for bookings",
                                           style: TextStyle(

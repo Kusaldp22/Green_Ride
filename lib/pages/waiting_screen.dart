@@ -61,7 +61,7 @@ class _RideScreenState extends State<RideScreen> {
   Future<void> fetchDriverUsername() async {
     try {
       String driverUid =
-          widget.ride.userId; // Make sure `uid` is in your RideModel
+          widget.ride.userId; 
       DatabaseReference userRef =
           FirebaseDatabase.instance.ref().child("users").child(driverUid);
 
