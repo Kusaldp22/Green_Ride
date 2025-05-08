@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:green_ride/pages/offer_rides/ride_model.dart';
 import 'package:green_ride/pages/payments/confirm.dart';
-import 'package:green_ride/pages/waiting_screen.dart'; // Import ConfirmationScreen
+import 'package:green_ride/pages/waiting_screen.dart';
 
 class AvailableRidesScreen extends StatefulWidget {
   final String startPoint;
@@ -37,12 +37,36 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
     }
   }
 
-  Future<List<RideModel>> fetchRides() async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('offered_rides')
-        .where('start_point', isEqualTo: widget.startPoint)
-        .where('destination', isEqualTo: widget.destination)
+  Future<double> getAverageRating(String rideId) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('ratings')
+        // .where('rideId', isEqualTo: rideId)
         .get();
+
+    if (snapshot.docs.isEmpty) return 0.0;
+
+    double total = 0;
+    for (var doc in snapshot.docs) {
+      total += (doc['rating'] ?? 0).toDouble();
+    }
+
+    return total / snapshot.docs.length;
+  }
+
+  Future<List<RideModel>> fetchRides() async {
+    Query query = FirebaseFirestore.instance
+        .collection('offered_rides')
+        .where('status', isNotEqualTo: 'completed');
+
+    if (widget.startPoint.isNotEmpty) {
+      query = query.where('start_point', isEqualTo: widget.startPoint);
+    }
+
+    if (widget.destination.isNotEmpty) {
+      query = query.where('destination', isEqualTo: widget.destination);
+    }
+
+    final querySnapshot = await query.get();
 
     return querySnapshot.docs
         .map((doc) => RideModel.fromFirestore(doc))
@@ -53,7 +77,7 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
       RideModel ride) async {
     if (currentUserId == null) return;
 
-    joinedUsers ??= []; // Ensure it's not null
+    joinedUsers ??= [];
     if (!joinedUsers.contains(currentUserId)) {
       joinedUsers.add(currentUserId!);
 
@@ -70,8 +94,7 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
         MaterialPageRoute(
           builder: (context) => ConfirmationScreen(
             ride: ride,
-            vehicleNumber:
-                ride.vehicleNumber, // Pass vehicleNumber from RideModel
+            vehicleNumber: ride.vehicleNumber,
           ),
         ),
       );
@@ -105,7 +128,10 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final rides = snapshot.data ?? [];
+          final rides = (snapshot.data ?? [])
+              .where((ride) => ride.status != 'completed')
+              .toList();
+
           if (rides.isEmpty) {
             return const Center(
               child: Text(
@@ -128,60 +154,65 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
               // Calculate remaining seats
               num availableSeats = ride.seats - joinedUsers.length;
 
-              return Card(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                elevation: 3,
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  leading: CircleAvatar(
-                    radius: 25,
-                    backgroundColor: Colors.grey[300],
-                    backgroundImage: ride.profileImageUrl.isNotEmpty
-                        ? NetworkImage(ride.profileImageUrl) as ImageProvider
-                        : const AssetImage("assets/images/profile.jpeg"),
-                  ),
-                  title: Text(ride.carName,
-                      style: const TextStyle(
-                          fontSize: 16, fontWeight: FontWeight.bold)),
-                  subtitle: Text(
-                      '${ride.type} | $availableSeats seats left | ⭐ ${ride.rating}'),
+              return FutureBuilder<double>(
+                future: getAverageRating(ride.id),
+                builder: (context, snapshot) {
+                  final avgRating = snapshot.data?.toStringAsFixed(1) ?? "0.0";
 
-                  // Hide "Join Ride" for ride owner
-                  trailing: isUserRide
-                      ? const SizedBox.shrink()
-                      : isJoined
-                          ? ElevatedButton.icon(
-                              onPressed: () {
-                                // Navigate to map screen
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        RideMapScreen(ride: ride),
+                  return Card(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    elevation: 3,
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.all(16),
+                      leading: CircleAvatar(
+                        radius: 25,
+                        backgroundColor: Colors.grey[300],
+                        backgroundImage: ride.profileImageUrl.isNotEmpty
+                            ? NetworkImage(ride.profileImageUrl)
+                                as ImageProvider
+                            : const AssetImage("assets/images/profile.jpeg"),
+                      ),
+                      title: Text(ride.carName,
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
+                      subtitle: Text(
+                          '${ride.type} | $availableSeats seats left | ⭐ $avgRating'),
+                      trailing: isUserRide
+                          ? const SizedBox.shrink()
+                          : isJoined
+                              ? ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            RideMapScreen(ride: ride),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.map),
+                                  label: const Text('View Map'),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue,
+                                    foregroundColor: Colors.white,
                                   ),
-                                );
-                              },
-                              icon: Icon(Icons.map),
-                              label: Text('View Map'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue,
-                                foregroundColor: Colors.white,
-                              ),
-                            )
-                          : ElevatedButton(
-                              onPressed: ride.isFull
-                                  ? null
-                                  : () => joinRide(
-                                      ride.id, joinedUsers, ride.seats, ride),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                              ),
-                              child: const Text('Join Ride'),
-                            ),
-                ),
+                                )
+                              : ElevatedButton(
+                                  onPressed: ride.isFull
+                                      ? null
+                                      : () => joinRide(ride.id, joinedUsers,
+                                          ride.seats, ride),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: const Text('Join Ride'),
+                                ),
+                    ),
+                  );
+                },
               );
             },
           );

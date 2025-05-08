@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:green_ride/pages/bottom_nav/home.dart';
 import 'package:green_ride/pages/offer_rides/ride_model.dart';
 import 'package:green_ride/pages/payments/paypal.dart';
 import 'dart:convert';
@@ -622,9 +623,12 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                   actions: [
                                     TextButton(
                                       onPressed: () {
-                                        Navigator.pop(context); // Close dialog
-                                        Navigator.pop(
-                                            context); // Close current screen
+                                        // Navigator.pop(context); // Close dialog
+                                        Navigator.push(context,
+                                            MaterialPageRoute(
+                                                builder: (context) {
+                                          return const HomePage();
+                                        })); // Close current screen
                                       },
                                       child: const Text('OK'),
                                     ),

@@ -7,7 +7,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:green_ride/authentication/login.dart';
 import 'package:green_ride/global/global_var.dart';
 import 'package:green_ride/methods/common_methods.dart';
-import 'package:green_ride/pages/add_rides.dart';
+import 'package:green_ride/pages/offer_rides/add_rides.dart';
 import 'package:green_ride/pages/bottom_nav/profile.dart';
 import 'package:green_ride/pages/offer_rides/available_cars.dart';
 

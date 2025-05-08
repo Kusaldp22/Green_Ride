@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:green_ride/dropoff.dart' as dropoff;
+import 'package:green_ride/pages/dropoff.dart' as dropoff;
 import 'package:green_ride/pages/offer_rides/ride_model.dart' as ride_model;
 import 'package:green_ride/splash_screen.dart';
 

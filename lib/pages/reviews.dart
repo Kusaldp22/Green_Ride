@@ -332,7 +332,7 @@ class _RatingScreenState extends State<RatingScreen>
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 32),
-                // Driver avatar with subtle animation - using the sunglasses baby image
+                
                 Hero(
                   tag: 'driver-avatar',
                   child: GestureDetector(

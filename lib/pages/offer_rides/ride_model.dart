@@ -15,7 +15,7 @@ class RideModel {
   final String uniId;
   final String vehicleType;
   final String rideId;
-  String status; // <-- ✅ NEW FIELD
+  String status; // 
 
   RideModel({
     required this.id,
@@ -32,7 +32,7 @@ class RideModel {
     required this.uniId,
     required this.vehicleType,
     required this.rideId,
-    this.status = 'pending', // <-- ✅ Default status
+    this.status = 'pending', // 
   });
 
   bool get isFull => (joinedUsers?.length ?? 0) >= seats;
@@ -61,6 +61,10 @@ class RideModel {
       status: data['status'] ?? 'pending', // <-- ✅ Firestore status field
     );
   }
+
+  get start_point => null;
+
+  get destination => null;
 
   Map<String, dynamic> toFirestore() {
     return {

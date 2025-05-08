@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:green_ride/pages/bottom_nav/earnings.dart';
 import 'package:green_ride/pages/bottom_nav/home.dart';
-import 'package:green_ride/pages/bottom_nav/profile.dart';
 import 'package:green_ride/pages/bottom_nav/trips.dart';
+import 'package:green_ride/pages/chat/chat_list.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -25,15 +25,12 @@ class _DashboardState extends State<Dashboard>
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-
     tabController = TabController(length: 4, vsync: this);
   }
 
   @override
   void dispose() {
-    // TODO: implement dispose
     tabController!.dispose();
     super.dispose();
   }
@@ -48,10 +45,9 @@ class _DashboardState extends State<Dashboard>
           const HomePage(),
           Ratings(),
           const Trips(),
-          const ProfilePage(),
+          const ChatListScreen(), // ✅ replaces static Chat screen
         ],
       ),
-      // Make sure bottomNavigationBar is defined here
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(
@@ -67,23 +63,19 @@ class _DashboardState extends State<Dashboard>
             label: "Trips",
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Profile",
+            icon: Icon(Icons.chat_sharp),
+            label: "Chat",
           ),
         ],
         currentIndex: selectedIndex,
-        // Uncomment the backgroundColor
-        backgroundColor:
-            Colors.green.shade300, // Try setting an explicit background color
+        backgroundColor: Colors.green.shade300,
         unselectedItemColor: Colors.white,
         selectedItemColor: Color.fromARGB(255, 6, 96, 199),
         showSelectedLabels: true,
-        selectedLabelStyle: const TextStyle(
-          fontSize: 12,
-        ),
+        selectedLabelStyle: const TextStyle(fontSize: 12),
         type: BottomNavigationBarType.fixed,
         onTap: onBarItemClicked,
-        elevation: 8, // Add elevation to make it more visible
+        elevation: 8,
       ),
     );
   }

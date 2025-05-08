@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:green_ride/pages/chat/chat_screen.dart';
 import 'package:green_ride/pages/offer_rides/ride_model.dart';
 import 'package:green_ride/pages/reviews.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class RideMapScreen extends StatelessWidget {
   final RideModel ride;
@@ -50,18 +53,51 @@ class _RideScreenState extends State<RideScreen> {
   String username = "";
   double totalAmount = 0.0;
   String paymentMethod = "";
+  String? phoneNumber;
+  late String currentUserId;
+  double averageRating = 0.0;
 
   @override
   void initState() {
     super.initState();
     fetchDriverUsername();
     fetchTotalPayment();
+    fetchAverageRating();
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        currentUserId = user.uid;
+      });
+    }
+  }
+
+  Future<void> fetchAverageRating() async {
+    final avg = await getAverageRating(widget.ride.rideId);
+    setState(() {
+      averageRating = avg;
+    });
+  }
+
+  Future<double> getAverageRating(String rideId) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('ratings')
+        // .where('rideId', isEqualTo: rideId)
+        .get();
+
+    if (snapshot.docs.isEmpty) return 0.0;
+
+    double total = 0;
+    for (var doc in snapshot.docs) {
+      total += (doc['rating'] ?? 0).toDouble();
+    }
+
+    return total / snapshot.docs.length;
   }
 
   Future<void> fetchDriverUsername() async {
     try {
-      String driverUid =
-          widget.ride.userId; 
+      String driverUid = widget.ride.userId;
       DatabaseReference userRef =
           FirebaseDatabase.instance.ref().child("users").child(driverUid);
 
@@ -71,6 +107,7 @@ class _RideScreenState extends State<RideScreen> {
         setState(() {
           userProfileImage = userData['profileImage'] ?? "";
           username = userData['username'] ?? "";
+          phoneNumber = userData['mobile'] ?? "";
         });
       } else {
         debugPrint("Invalid user data or profileImage missing.");
@@ -107,6 +144,46 @@ class _RideScreenState extends State<RideScreen> {
     } catch (e) {
       debugPrint("Error fetching payments: $e");
     }
+  }
+
+  void _callDriver() async {
+    if (phoneNumber != null && phoneNumber!.isNotEmpty) {
+      final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+      try {
+        final bool launched = await launchUrl(
+          phoneUri,
+          mode: LaunchMode.externalApplication,
+        );
+
+        if (!launched) {
+          throw 'Could not launch $phoneUri';
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to call driver: $e')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Phone number not available')),
+      );
+    }
+  }
+
+  void _messageDriver() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChatScreen(
+          driverId: widget.ride.userId,
+          driverName: username,
+          driverImage: userProfileImage,
+          currentUserId: currentUserId,
+
+          // currentUserId: Get your current user ID from your auth system
+        ),
+      ),
+    );
   }
 
   @override
@@ -146,11 +223,13 @@ class _RideScreenState extends State<RideScreen> {
                 ),
                 const Divider(height: 1),
 
-                // Driver Info
+                // Driver Info with Call and Message buttons
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      // Driver profile image
                       Container(
                         width: 50,
                         height: 50,
@@ -180,36 +259,74 @@ class _RideScreenState extends State<RideScreen> {
                               ),
                       ),
                       const SizedBox(width: 16),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            username,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            widget.ride.uniId,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black54,
-                            ),
-                          ),
-                          const Row(
-                            children: [
-                              Icon(Icons.star, color: Colors.amber, size: 16),
-                              Text(
-                                ' 4.9 (631 reviews)',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black54,
-                                ),
+
+                      // Driver details
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              username,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
-                          ),
-                        ],
+                            ),
+                            Text(
+                              widget.ride.uniId,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Icon(Icons.star, color: Colors.amber, size: 16),
+                                Text(
+                                  averageRating.toStringAsFixed(1),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black54,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Call button
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.green.shade100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.call,
+                              color: Colors.green, size: 20),
+                          onPressed: _callDriver,
+                          tooltip: 'Call driver',
+                        ),
+                      ),
+
+                      const SizedBox(width: 12),
+
+                      // Message button
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.blue.shade100,
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.message,
+                              color: Colors.blue, size: 20),
+                          onPressed: _messageDriver,
+                          tooltip: 'Message driver',
+                        ),
                       ),
                     ],
                   ),
