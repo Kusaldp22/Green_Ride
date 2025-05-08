@@ -15,7 +15,9 @@ class RideModel {
   final String uniId;
   final String vehicleType;
   final String rideId;
-  String status; // 
+  final GeoPoint? startLatLng;
+  final GeoPoint? endLatLng;
+  String status;
 
   RideModel({
     required this.id,
@@ -32,7 +34,9 @@ class RideModel {
     required this.uniId,
     required this.vehicleType,
     required this.rideId,
-    this.status = 'pending', // 
+    this.status = 'pending',
+    this.startLatLng,
+    this.endLatLng,
   });
 
   bool get isFull => (joinedUsers?.length ?? 0) >= seats;
@@ -58,13 +62,11 @@ class RideModel {
       uniId: data['driver_id'] ?? '',
       vehicleType: data['car_type'] ?? '',
       rideId: doc.id,
-      status: data['status'] ?? 'pending', // <-- ✅ Firestore status field
+      status: data['status'] ?? 'pending',
+      startLatLng: data['start_location'],
+      endLatLng: data['end_location'],
     );
   }
-
-  get start_point => null;
-
-  get destination => null;
 
   Map<String, dynamic> toFirestore() {
     return {
@@ -80,7 +82,9 @@ class RideModel {
       'driver_id': uniId,
       'car_type': vehicleType,
       'ride_id': rideId,
-      'status': status, // <-- ✅ Include status in Firestore
+      'status': status,
+      'start_location': startLatLng,
+      'end_location': endLatLng,
     };
   }
 }

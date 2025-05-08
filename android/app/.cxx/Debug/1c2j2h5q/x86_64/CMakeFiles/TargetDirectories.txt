@@ -1,0 +1,2 @@
+D:/Flutter/green_ride/android/app/.cxx/Debug/1c2j2h5q/x86_64/CMakeFiles/edit_cache.dir
+D:/Flutter/green_ride/android/app/.cxx/Debug/1c2j2h5q/x86_64/CMakeFiles/rebuild_cache.dir

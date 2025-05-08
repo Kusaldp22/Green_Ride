@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -6,6 +8,13 @@ import 'package:green_ride/pages/chat/chat_screen.dart';
 import 'package:green_ride/pages/offer_rides/ride_model.dart';
 import 'package:green_ride/pages/reviews.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class RideMapScreen extends StatelessWidget {
   final RideModel ride;
@@ -57,12 +66,19 @@ class _RideScreenState extends State<RideScreen> {
   late String currentUserId;
   double averageRating = 0.0;
 
+  Completer<GoogleMapController> _controller = Completer();
+  List<LatLng> polylineCoordinates = [];
+  Set<Polyline> polylines = {};
+  LatLng? startLocation;
+  LatLng? endLocation;
+
   @override
   void initState() {
     super.initState();
     fetchDriverUsername();
     fetchTotalPayment();
     fetchAverageRating();
+    _setMapData();
 
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -77,6 +93,145 @@ class _RideScreenState extends State<RideScreen> {
     setState(() {
       averageRating = avg;
     });
+  }
+
+  Future<void> _setMapData() async {
+    if (widget.ride.startLatLng != null && widget.ride.endLatLng != null) {
+      setState(() {
+        startLocation = LatLng(widget.ride.startLatLng!.latitude,
+            widget.ride.endLatLng!.longitude);
+        endLocation = LatLng(
+            widget.ride.endLatLng!.latitude, widget.ride.endLatLng!.longitude);
+      });
+
+      await _getPolylinePoints();
+
+      // Fit the map to markers immediately after getting coordinates
+      if (_controller.isCompleted) {
+        final controller = await _controller.future;
+        _fitMapToMarkers(controller);
+      }
+
+      setState(() {
+        polylines.add(
+          Polyline(
+            polylineId: const PolylineId('route'),
+            color: Colors.green,
+            points: polylineCoordinates,
+            width: 5,
+          ),
+        );
+      });
+    }
+  }
+
+  Future<void> _getPolylinePoints() async {
+    if (startLocation == null || endLocation == null) return;
+
+    const String apiKey = "AIzaSyBk1wlKR68wI-IDMzsbLPf1YiEZCetZDHU";
+    final String url =
+        "https://maps.googleapis.com/maps/api/directions/json?origin=${startLocation!.latitude},${startLocation!.longitude}&destination=${endLocation!.latitude},${endLocation!.longitude}&key=$apiKey";
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      final data = json.decode(response.body);
+
+      if (data["routes"].isNotEmpty) {
+        var points = PolylinePoints().decodePolyline(
+          data["routes"][0]["overview_polyline"]["points"],
+        );
+        polylineCoordinates.clear();
+        polylineCoordinates.addAll(
+          points.map((e) => LatLng(e.latitude, e.longitude)),
+        );
+      }
+    } catch (e) {
+      debugPrint("Error getting polyline points: $e");
+    }
+  }
+
+  double _calculateInitialZoom() {
+    if (startLocation == null || endLocation == null) return 10.0;
+
+    // Calculate distance between points in km
+    double distance = Geolocator.distanceBetween(
+          startLocation!.latitude,
+          startLocation!.longitude,
+          endLocation!.latitude,
+          endLocation!.longitude,
+        ) /
+        1000;
+
+    // Simple formula to determine zoom level based on distance
+    if (distance > 100) return 8.0;
+    if (distance > 50) return 9.0;
+    if (distance > 20) return 10.0;
+    if (distance > 10) return 11.0;
+    if (distance > 5) return 12.0;
+    if (distance > 2) return 13.0;
+    return 14.0;
+  }
+
+  Future<void> _fitMapToMarkers(GoogleMapController controller) async {
+    if (startLocation == null || endLocation == null) return;
+
+    // Create bounds that include both markers with some padding
+    LatLngBounds bounds = LatLngBounds(
+      southwest: LatLng(
+        min(startLocation!.latitude, endLocation!.latitude),
+        min(startLocation!.longitude, endLocation!.longitude),
+      ),
+      northeast: LatLng(
+        max(startLocation!.latitude, endLocation!.latitude),
+        max(startLocation!.longitude, endLocation!.longitude),
+      ),
+    );
+
+    // Calculate the ideal zoom level based on distance
+    double distance = Geolocator.distanceBetween(
+      startLocation!.latitude,
+      startLocation!.longitude,
+      endLocation!.latitude,
+      endLocation!.longitude,
+    );
+
+    // Adjust padding based on distance (closer points need less padding)
+    double padding = distance > 10000 ? 100 : 50; // in meters
+
+    await controller.animateCamera(
+      CameraUpdate.newLatLngBounds(bounds, padding.toDouble()),
+    );
+  }
+
+  Future<void> _openGoogleMapsDirections() async {
+    if (startLocation == null || endLocation == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Location data not available')),
+      );
+      return;
+    }
+
+    final String origin =
+        '${startLocation!.latitude},${startLocation!.longitude}';
+    final String destination =
+        '${endLocation!.latitude},${endLocation!.longitude}';
+    final String url =
+        'https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$destination&travelmode=driving';
+
+    try {
+      if (await canLaunchUrl(Uri.parse(url))) {
+        await launchUrl(
+          Uri.parse(url),
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        throw 'Could not launch $url';
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to open Google Maps: $e')),
+      );
+    }
   }
 
   Future<double> getAverageRating(String rideId) async {
@@ -188,23 +343,48 @@ class _RideScreenState extends State<RideScreen> {
 
   @override
   Widget build(BuildContext context) {
+    bool _isLoading = true;
     return Scaffold(
       body: Column(
         children: [
           // Map section
           Expanded(
-            child: Stack(
-              children: [
-                Container(color: const Color(0xFFF0F0F0)),
-                CustomPaint(
-                  size:
-                      Size(MediaQuery.of(context).size.width, double.infinity),
-                  painter: RoutePainter(),
-                ),
-              ],
-            ),
+            child: startLocation != null && endLocation != null
+                ? GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: startLocation ?? LatLng(0, 0), // fallback if null
+                      zoom: _calculateInitialZoom(), // Add this method
+                    ),
+                    polylines: polylines,
+                    markers: {
+                      Marker(
+                        markerId: const MarkerId('start'),
+                        position: startLocation!,
+                        infoWindow: InfoWindow(
+                          title: "Start Location",
+                          snippet: widget
+                              .ride.location, // Use the start point address
+                        ),
+                      ),
+                      Marker(
+                        markerId: const MarkerId('end'),
+                        position: endLocation!,
+                        infoWindow: InfoWindow(
+                          title: "End Location",
+                          snippet: widget.ride.carName
+                              .split(' to ')[1], // Get destination from carName
+                        ),
+                      ),
+                    },
+                    onMapCreated: (GoogleMapController controller) async {
+                      _controller.complete(controller);
+                      // Fit the map to show both markers
+                      await _fitMapToMarkers(controller);
+                      setState(() => _isLoading = false);
+                    },
+                  )
+                : const Center(child: CircularProgressIndicator()),
           ),
-
           // Bottom Sheet
           Container(
             color: Colors.white,
@@ -374,6 +554,34 @@ class _RideScreenState extends State<RideScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+
+                // Add this in your bottom sheet Column, after the Payment Method row
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 8.0),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.directions, color: Colors.white),
+                      label: const Text(
+                        'Get Directions',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color.fromARGB(255, 26, 211, 1),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      onPressed: _openGoogleMapsDirections,
+                    ),
                   ),
                 ),
 

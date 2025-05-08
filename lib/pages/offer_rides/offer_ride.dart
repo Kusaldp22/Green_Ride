@@ -22,6 +22,10 @@ class _ShareRideScreenState extends State<ShareRideScreen> {
   String? _selectedVehicleType;
   String? selectedGender;
   String? studentId;
+  double startLat = 0.0;
+  double startLng = 0.0;
+  double endLat = 0.0;
+  double endLng = 0.0;
   final TextEditingController nameController = TextEditingController();
   final TextEditingController studentIdController = TextEditingController();
   final TextEditingController startPointController = TextEditingController();
@@ -111,23 +115,55 @@ class _ShareRideScreenState extends State<ShareRideScreen> {
     }
   }
 
-  void selectLocation(String placeDescription, bool isStart) {
-    if (isStart) {
-      setState(() {
-        startPointController.text = placeDescription;
-        startLocationSuggestions = [];
-        startSessionToken = '';
-      });
-    } else {
-      setState(() {
-        destinationController.text = placeDescription;
-        destinationLocationSuggestions = [];
-        destinationSessionToken = '';
-      });
-    }
+  Future<void> selectLocation(String placeDescription, bool isStart) async {
+    setState(() {
+      _isLoading = true;
+    });
 
-    // Hide keyboard
-    FocusScope.of(context).unfocus();
+    try {
+      const String apiKey = "AIzaSyCbYzpGVw5np6Rr_aHfHiz3ycTag0ILVZA";
+      final response = await http.get(
+        Uri.parse(
+          'https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${Uri.encodeComponent(placeDescription)}&inputtype=textquery&fields=geometry&key=$apiKey',
+        ),
+      );
+
+      final data = json.decode(response.body);
+      if (response.statusCode == 200 && data['status'] == 'OK') {
+        final location = data['candidates'][0]['geometry']['location'];
+        final lat = location['lat'];
+        final lng = location['lng'];
+
+        if (isStart) {
+          setState(() {
+            startPointController.text = placeDescription;
+            startLat = lat;
+            startLng = lng;
+            startLocationSuggestions = [];
+          });
+        } else {
+          setState(() {
+            destinationController.text = placeDescription;
+            endLat = lat;
+            endLng = lng;
+            destinationLocationSuggestions = [];
+          });
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not get coordinates for location')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error getting coordinates: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+      FocusScope.of(context).unfocus();
+    }
   }
 
   void clearAllSuggestions() {
@@ -187,6 +223,8 @@ class _ShareRideScreenState extends State<ShareRideScreen> {
         'student_id':
             studentIdController.text.isEmpty ? null : studentIdController.text,
         'car_type': vehicleType,
+        'start_location': GeoPoint(startLat, startLng),
+        'end_location': GeoPoint(endLat, endLng),
         'timestamp': FieldValue.serverTimestamp(),
         'status': 'pending',
       });
