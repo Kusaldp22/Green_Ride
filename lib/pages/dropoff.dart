@@ -1,8 +1,17 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:green_ride/pages/bottom_nav/dashboard.dart';
 import 'package:green_ride/pages/offer_rides/ride_model.dart';
+
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class DropoffScreen extends StatelessWidget {
   final RideModel ride;
@@ -61,12 +70,118 @@ class _RideScreenState extends State<RideScreen> {
   List<String> passengerNames = [];
   List<String> passengerCodes = [];
 
+  Completer<GoogleMapController> _controller = Completer();
+  List<LatLng> polylineCoordinates = [];
+  Set<Polyline> polylines = {};
+  LatLng? startLocation;
+  LatLng? endLocation;
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
     fetchDriverUsername();
     fetchTotalPayment();
     fetchPassengers();
+    _setMapData();
+  }
+
+  Future<void> _setMapData() async {
+    if (widget.ride.startLatLng != null && widget.ride.endLatLng != null) {
+      setState(() {
+        startLocation = LatLng(
+          widget.ride.startLatLng!.latitude,
+          widget.ride.startLatLng!.longitude,
+        );
+        endLocation = LatLng(
+          widget.ride.endLatLng!.latitude,
+          widget.ride.endLatLng!.longitude,
+        );
+      });
+
+      await _getPolylinePoints();
+
+      if (_controller.isCompleted) {
+        final controller = await _controller.future;
+        _fitMapToMarkers(controller);
+      }
+
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _getPolylinePoints() async {
+    if (startLocation == null || endLocation == null) return;
+
+    const String apiKey = "AIzaSyBk1wlKR68wI-IDMzsbLPf1YiEZCetZDHU";
+    final String url =
+        "https://maps.googleapis.com/maps/api/directions/json?origin=${startLocation!.latitude},${startLocation!.longitude}&destination=${endLocation!.latitude},${endLocation!.longitude}&key=$apiKey";
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      final data = json.decode(response.body);
+
+      if (data["routes"].isNotEmpty) {
+        var points = PolylinePoints().decodePolyline(
+          data["routes"][0]["overview_polyline"]["points"],
+        );
+        polylineCoordinates.clear();
+        polylineCoordinates.addAll(
+          points.map((e) => LatLng(e.latitude, e.longitude)),
+        );
+
+        setState(() {
+          polylines.add(
+            Polyline(
+              polylineId: const PolylineId('route'),
+              color: Colors.green,
+              points: polylineCoordinates,
+              width: 5,
+            ),
+          );
+        });
+      }
+    } catch (e) {
+      debugPrint("Error getting polyline points: $e");
+    }
+  }
+
+  Future<void> _fitMapToMarkers(GoogleMapController controller) async {
+    if (startLocation == null || endLocation == null) return;
+
+    LatLngBounds bounds = LatLngBounds(
+      southwest: LatLng(
+        min(startLocation!.latitude, endLocation!.latitude),
+        min(startLocation!.longitude, endLocation!.longitude),
+      ),
+      northeast: LatLng(
+        max(startLocation!.latitude, endLocation!.latitude),
+        max(startLocation!.longitude, endLocation!.longitude),
+      ),
+    );
+
+    await controller.animateCamera(
+      CameraUpdate.newLatLngBounds(bounds, 50),
+    );
+  }
+
+  Future<void> _openGoogleMapsDirections() async {
+    if (startLocation == null || endLocation == null) return;
+
+    final String origin =
+        '${startLocation!.latitude},${startLocation!.longitude}';
+    final String destination =
+        '${endLocation!.latitude},${endLocation!.longitude}';
+    final String url =
+        'https://www.google.com/maps/dir/?api=1&origin=$origin&destination=$destination&travelmode=driving';
+
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 
   void _showSuccessDialog() {
@@ -206,15 +321,38 @@ class _RideScreenState extends State<RideScreen> {
       children: [
         Expanded(
           flex: 3,
-          child: Stack(
-            children: [
-              Container(color: const Color(0xFFF0F0F0)),
-              CustomPaint(
-                size: Size(MediaQuery.of(context).size.width, double.infinity),
-                painter: RoutePainter(),
-              ),
-            ],
-          ),
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: startLocation ?? const LatLng(0, 0),
+                    zoom: 12,
+                  ),
+                  polylines: polylines,
+                  markers: {
+                    if (startLocation != null)
+                      Marker(
+                        markerId: const MarkerId('start'),
+                        position: startLocation!,
+                        infoWindow: InfoWindow(
+                          title: 'Start Location',
+                          snippet: widget.ride.location,
+                        ),
+                      ),
+                    if (endLocation != null)
+                      Marker(
+                        markerId: const MarkerId('end'),
+                        position: endLocation!,
+                        infoWindow: InfoWindow(
+                          title: 'End Location',
+                          snippet: widget.ride.carName.split(' to ')[1],
+                        ),
+                      ),
+                  },
+                  onMapCreated: (GoogleMapController controller) {
+                    _controller.complete(controller);
+                  },
+                ),
         ),
         Container(
           color: Colors.white,
@@ -284,6 +422,25 @@ class _RideScreenState extends State<RideScreen> {
                         style: const TextStyle(
                             fontSize: 16, color: Colors.black54)),
                   ],
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.directions, color: Colors.white),
+                  label: const Text(
+                    'Get Directions',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color.fromARGB(255, 26, 211, 1),
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: _openGoogleMapsDirections,
                 ),
               ),
               Padding(

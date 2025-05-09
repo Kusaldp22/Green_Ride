@@ -14,12 +14,14 @@ class ChatListScreen extends StatelessWidget {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.green.shade200,
-        title: const Text(
-          'Messages',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
+        title: Center(
+          child: const Text(
+            'Messages',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 22,
+            ),
           ),
         ),
         actions: [

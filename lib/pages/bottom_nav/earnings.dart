@@ -17,17 +17,14 @@ class Ratings extends StatelessWidget {
             // Header with back button and title
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  const SizedBox(width: 16),
-                  const Text(
-                    'My Reviews',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
+              child: Center(
+                child: Text(
+                  'My Reviews',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
+                ),
               ),
             ),
 

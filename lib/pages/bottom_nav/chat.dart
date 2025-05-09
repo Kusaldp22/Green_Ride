@@ -124,15 +124,18 @@ class _ChatState extends State<Chat> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green.shade200,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            try {
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color.fromARGB(255, 6, 96, 199),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () {
               Navigator.pop(context);
-            } catch (e) {
-              debugPrint("Error navigating back: $e");
-            }
-          },
+            },
+          ),
         ),
         title: Row(
           children: [
