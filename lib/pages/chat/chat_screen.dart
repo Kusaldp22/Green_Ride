@@ -98,6 +98,7 @@ class _ChatScreenState extends State<ChatScreen> {
       await chatDoc.set({
         'participants': [widget.currentUserId, widget.driverId],
         'lastMessageTime': Timestamp.fromDate(newMessage.timestamp),
+        'lastMessage': newMessage.text,
       }, SetOptions(merge: true));
 
       await chatDoc.collection('messages').add({

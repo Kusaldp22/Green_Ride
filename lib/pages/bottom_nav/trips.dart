@@ -30,6 +30,22 @@ class _TripsState extends State<Trips> {
     }
   }
 
+  Future<double> getAverageRating(String rideId) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('ratings')
+        // .where('rideId', isEqualTo: rideId) // Uncomment if you want to filter by rideId
+        .get();
+
+    if (snapshot.docs.isEmpty) return 0.0;
+
+    double total = 0;
+    for (var doc in snapshot.docs) {
+      total += (doc['rating'] ?? 0).toDouble();
+    }
+
+    return total / snapshot.docs.length;
+  }
+
   Future<List<ride_model.RideModel>> fetchMyOfferedRides() async {
     if (currentUserId == null) return [];
 
@@ -137,99 +153,108 @@ class _TripsState extends State<Trips> {
             final int bookedSeats = ride.joinedUsers?.length ?? 0;
             final bool allSeatsFilled = bookedSeats >= ride.seats;
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFFCCEACC),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipOval(
-                    child: Image.network(
-                      ride.profileImageUrl.isNotEmpty
-                          ? ride.profileImageUrl
-                          : 'https://i.pinimg.com/736x/ea/3f/2f/ea3f2f888a79f5e19dfd5e368f3262b0.jpg',
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                    ),
+            return FutureBuilder<double>(
+              future: getAverageRating(ride.id),
+              builder: (context, ratingSnapshot) {
+                final avgRating =
+                    ratingSnapshot.data?.toStringAsFixed(1) ?? "0.0";
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFCCEACC),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade300),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          ride.carName,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipOval(
+                        child: Image.network(
+                          ride.profileImageUrl.isNotEmpty
+                              ? ride.profileImageUrl
+                              : 'https://i.pinimg.com/736x/ea/3f/2f/ea3f2f888a79f5e19dfd5e368f3262b0.jpg',
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${ride.type} | $bookedSeats/${ride.seats} seats booked | ⭐ ${ride.rating}',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                        const SizedBox(height: 8),
-                        showCompleted
-                            ? const Text(
-                                'Completed',
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              )
-                            : allSeatsFilled
-                                ? ElevatedButton(
-                                    onPressed: () async {
-                                      final result = await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              dropoff.DropoffScreen(ride: ride),
-                                        ),
-                                      );
-
-                                      if (result == true) {
-                                        setState(() {
-                                          ride.status = 'completed';
-                                        });
-
-                                        await FirebaseFirestore.instance
-                                            .collection('offered_rides')
-                                            .doc(ride.id)
-                                            .update({
-                                          'status': 'completed',
-                                        });
-                                      }
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          const Color.fromARGB(255, 6, 96, 199),
-                                    ),
-                                    child: const Text(
-                                      'Ride Now',
-                                      style: TextStyle(color: Colors.white),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              ride.carName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${ride.type} | $bookedSeats/${ride.seats} seats booked | ⭐ $avgRating',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                            const SizedBox(height: 8),
+                            showCompleted
+                                ? const Text(
+                                    'Completed',
+                                    style: TextStyle(
+                                      color: Colors.red,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   )
-                                : const Text(
-                                    "Waiting for bookings",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                      ],
-                    ),
+                                : allSeatsFilled
+                                    ? ElevatedButton(
+                                        onPressed: () async {
+                                          final result = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  dropoff.DropoffScreen(
+                                                      ride: ride),
+                                            ),
+                                          );
+
+                                          if (result == true) {
+                                            setState(() {
+                                              ride.status = 'completed';
+                                            });
+
+                                            await FirebaseFirestore.instance
+                                                .collection('offered_rides')
+                                                .doc(ride.id)
+                                                .update({
+                                              'status': 'completed',
+                                            });
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color.fromARGB(
+                                              255, 6, 96, 199),
+                                        ),
+                                        child: const Text(
+                                          'Ride Now',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      )
+                                    : const Text(
+                                        "Waiting for bookings",
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             );
           },
         );

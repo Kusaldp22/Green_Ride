@@ -288,7 +288,7 @@ class ChatListView extends StatelessWidget {
               final unreadCount =
                   data['unreadCount_$currentUserId'] as int? ?? 0;
 
-              // Fetch other user's data
+              // Fetch other user's data from Realtime Database (keep this unchanged)
               return FutureBuilder<DataSnapshot>(
                 future: FirebaseDatabase.instance
                     .ref()
@@ -323,13 +323,59 @@ class ChatListView extends StatelessWidget {
                     }
                   }
 
-                  return ChatListTile(
-                    username: username,
-                    profileImage: profileImage,
-                    lastMessage: lastMessage,
-                    lastMessageTime: lastMessageTime.toDate(),
-                    unreadCount: unreadCount,
-                    isOnline: isOnline,
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: profileImage != null
+                          ? NetworkImage(profileImage!)
+                          : null,
+                      child: profileImage == null
+                          ? const Icon(Icons.person, color: Colors.white)
+                          : null,
+                      backgroundColor: Colors.grey.shade300,
+                    ),
+                    title: Text(
+                      username,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      lastMessage,
+                      style: TextStyle(
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          DateFormat('hh:mm a')
+                              .format(lastMessageTime.toDate()),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        if (unreadCount > 0)
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Color.fromARGB(255, 6, 96, 199),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Text(
+                              unreadCount.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                     onTap: () {
                       FirebaseFirestore.instance
                           .collection('chats')
@@ -468,13 +514,11 @@ class ChatListTile extends StatelessWidget {
                       Expanded(
                         child: Text(
                           username,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: unreadCount > 0
-                                ? FontWeight.bold
-                                : FontWeight.w600,
-                            color: Colors.black87,
-                          ),
+                          // style: TextStyle(
+                          //   fontSize: 18, // Increased from 16 to 18
+                          //   fontWeight: FontWeight.bold, // Always bold now
+                          //   color: Colors.black87,
+                          // ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -487,6 +531,7 @@ class ChatListTile extends StatelessWidget {
                               ? Colors.green.shade700
                               : Colors.grey.shade600,
                         ),
+                        maxLines: 1,
                       ),
                     ],
                   ),
