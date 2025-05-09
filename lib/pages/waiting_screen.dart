@@ -99,7 +99,7 @@ class _RideScreenState extends State<RideScreen> {
     if (widget.ride.startLatLng != null && widget.ride.endLatLng != null) {
       setState(() {
         startLocation = LatLng(widget.ride.startLatLng!.latitude,
-            widget.ride.endLatLng!.longitude);
+            widget.ride.startLatLng!.longitude);
         endLocation = LatLng(
             widget.ride.endLatLng!.latitude, widget.ride.endLatLng!.longitude);
       });
