@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:green_ride/authentication/forget_pass.dart';
 import 'package:green_ride/global/global_var.dart';
 import 'package:green_ride/methods/common_methods.dart';
+import 'package:green_ride/onboard/start.dart';
 import 'package:green_ride/onboard/welcome.dart';
 import 'package:green_ride/pages/face_rec/face_rec.dart';
 
@@ -92,8 +93,8 @@ class _LoginState extends State<Login> {
       }
 
       username = userData["username"];
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (c) => const VerifyIdentityScreen()));
+      Navigator.pushReplacement(context,
+          MaterialPageRoute(builder: (c) => const VerifyIdentityScreen()));
     } on FirebaseAuthException catch (e) {
       CommonMethods.showSnackBar(e.message ?? "Authentication failed", context);
     } catch (e) {
@@ -152,7 +153,7 @@ class _LoginState extends State<Login> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const WelcomeScreen()));
+                                  builder: (context) => const StartScreen()));
                         },
                       ),
                     ),
