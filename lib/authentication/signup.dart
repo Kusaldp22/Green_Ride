@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:green_ride/methods/common_methods.dart';
 import 'package:green_ride/onboard/profile.dart';
 import 'package:green_ride/onboard/welcome.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -32,10 +33,44 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _restoreSignUpState();
+  }
+
   void _togglePasswordVisibility() {
     setState(() {
       _isPasswordVisible = !_isPasswordVisible;
     });
+  }
+
+  Future<void> _saveSignUpState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isSigningUp', true);
+    await prefs.setString('signup_name', _nameController.text);
+    await prefs.setString('signup_email', _emailController.text);
+    await prefs.setString('signup_mobile', _mobileController.text);
+    await prefs.setString('signup_password', _passwordController.text);
+  }
+
+  Future<void> _restoreSignUpState() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool('isSigningUp') ?? false) {
+      _nameController.text = prefs.getString('signup_name') ?? '';
+      _emailController.text = prefs.getString('signup_email') ?? '';
+      _mobileController.text = prefs.getString('signup_mobile') ?? '';
+      _passwordController.text = prefs.getString('signup_password') ?? '';
+    }
+  }
+
+  Future<void> _clearSignUpState() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('isSigningUp');
+    await prefs.remove('signup_name');
+    await prefs.remove('signup_email');
+    await prefs.remove('signup_mobile');
+    await prefs.remove('signup_password');
   }
 
   Future<void> _submitForm() async {

@@ -195,14 +195,18 @@ class _RideScreenState extends State<RideScreen> {
           children: [
             const Icon(Icons.check_circle, color: Colors.green, size: 64),
             const SizedBox(height: 16),
-            const Text(
-              'Payment Successful!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            Center(
+              child: const Text(
+                'Payment Completed',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Ride has been successfully completed.',
-              textAlign: TextAlign.center,
+            Center(
+              child: const Text(
+                'Ride has been successfully completed.',
+                textAlign: TextAlign.center,
+              ),
             ),
             const SizedBox(height: 24),
             ElevatedButton(

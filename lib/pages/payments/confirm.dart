@@ -559,8 +559,11 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                                           onPressed: () {
                                             Navigator.pop(
                                                 context); // Close dialog
-                                            Navigator.pop(
-                                                context); // Close current screen
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const HomePage())); // Close current screen
                                           },
                                           child: const Text('OK'),
                                         ),
