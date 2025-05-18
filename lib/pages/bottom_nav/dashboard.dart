@@ -1,8 +1,10 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:green_ride/pages/bottom_nav/earnings.dart';
 import 'package:green_ride/pages/bottom_nav/home.dart';
 import 'package:green_ride/pages/bottom_nav/trips.dart';
 import 'package:green_ride/pages/chat/chat_list.dart';
+import 'package:green_ride/service/notification.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -26,6 +28,8 @@ class _DashboardState extends State<Dashboard>
   @override
   void initState() {
     super.initState();
+    FirebaseMessaging.instance.requestPermission();
+    saveFcmToken();
     tabController = TabController(length: 4, vsync: this);
   }
 

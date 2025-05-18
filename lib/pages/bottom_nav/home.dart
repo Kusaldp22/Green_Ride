@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -10,6 +11,7 @@ import 'package:green_ride/methods/common_methods.dart';
 import 'package:green_ride/pages/offer_rides/add_rides.dart';
 import 'package:green_ride/pages/bottom_nav/profile.dart';
 import 'package:green_ride/pages/offer_rides/available_cars.dart';
+import 'package:green_ride/service/notification.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,7 +33,20 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    FirebaseMessaging.instance.requestPermission();
+    saveFcmToken();
     getUserProfile();
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (message.notification != null) {
+        // Show a snackbar or dialog
+        print('Notification: ${message.notification!.title}');
+      }
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      // Navigate to chat screen if needed
+    });
   }
 
   getUserProfile() async {

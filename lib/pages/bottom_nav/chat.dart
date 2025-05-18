@@ -31,6 +31,10 @@ class _ChatState extends State<Chat> {
     try {
       _chatId = _getChatId();
       _listenForMessages();
+      // Reset unread count for current user when opening chat
+      FirebaseFirestore.instance.collection('chats').doc(_chatId).set({
+        'unreadCount_${widget.currentUserId}': 0,
+      }, SetOptions(merge: true));
     } catch (e, stackTrace) {
       debugPrint("Error in initState: $e");
       debugPrint("StackTrace: $stackTrace");
@@ -94,6 +98,16 @@ class _ChatState extends State<Chat> {
           .doc(_chatId)
           .collection('messages')
           .add(message);
+
+      // Update chat doc with last message, time, and increment unread for other user
+      final otherUserId = widget.passengerId;
+      await FirebaseFirestore.instance.collection('chats').doc(_chatId).set({
+        'participants': [widget.currentUserId, widget.passengerId],
+        'lastMessage': text,
+        'lastMessageTime': Timestamp.now(),
+        'unreadCount_$otherUserId': FieldValue.increment(1),
+      }, SetOptions(merge: true));
+
       _messageController.clear();
       _scrollToBottom();
     } catch (e, stackTrace) {
@@ -166,12 +180,7 @@ class _ChatState extends State<Chat> {
                     padding: const EdgeInsets.all(8.0),
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
-                      try {
-                        return _buildMessageBubble(_messages[index]);
-                      } catch (e) {
-                        debugPrint("Error building message bubble: $e");
-                        return const SizedBox.shrink();
-                      }
+                      return _buildMessageBubble(_messages[index]);
                     },
                   ),
           ),
@@ -206,7 +215,6 @@ class _ChatState extends State<Chat> {
             Text(
               _formatTime(message.timestamp),
               style: TextStyle(
-                color: message.isMe ? Colors.white70 : Colors.black54,
                 fontSize: 10,
               ),
             ),
@@ -247,16 +255,11 @@ class _ChatState extends State<Chat> {
           Expanded(
             child: TextField(
               controller: _messageController,
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Colors.grey.shade100,
+              decoration: const InputDecoration(
+                hintText: "Type a message...",
+                border: InputBorder.none,
                 contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    EdgeInsets.symmetric(vertical: 10, horizontal: 16),
               ),
               onSubmitted: (_) => _sendMessage(),
             ),

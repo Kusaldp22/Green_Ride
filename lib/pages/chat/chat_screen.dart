@@ -28,6 +28,11 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _loadMessages();
+    // Reset unread count for current user when opening chat
+    final chatId = _getChatId();
+    FirebaseFirestore.instance.collection('chats').doc(chatId).set({
+      'unreadCount_${widget.currentUserId}': 0,
+    }, SetOptions(merge: true));
   }
 
   void _loadMessages() {
@@ -95,10 +100,13 @@ class _ChatScreenState extends State<ChatScreen> {
       final chatDoc =
           FirebaseFirestore.instance.collection('chats').doc(chatId);
 
+      // Update chat doc with last message, time, and increment unread for other user
+      final otherUserId = widget.driverId;
       await chatDoc.set({
         'participants': [widget.currentUserId, widget.driverId],
         'lastMessageTime': Timestamp.fromDate(newMessage.timestamp),
         'lastMessage': newMessage.text,
+        'unreadCount_$otherUserId': FieldValue.increment(1),
       }, SetOptions(merge: true));
 
       await chatDoc.collection('messages').add({
@@ -181,8 +189,7 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: const EdgeInsets.all(8.0),
               itemCount: _messages.length,
               itemBuilder: (context, index) {
-                final message = _messages[index];
-                return _buildMessageBubble(message);
+                return _buildMessageBubble(_messages[index]);
               },
             ),
           ),
@@ -217,7 +224,6 @@ class _ChatScreenState extends State<ChatScreen> {
             Text(
               _formatTime(message.timestamp),
               style: TextStyle(
-                color: message.isMe ? Colors.white70 : Colors.black54,
                 fontSize: 10,
               ),
             ),
@@ -254,18 +260,11 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: TextField(
               controller: _messageController,
-              decoration: InputDecoration(
-                hintText: 'Type a message...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+              decoration: const InputDecoration(
+                hintText: "Type a message...",
+                border: InputBorder.none,
+                contentPadding:
+                    EdgeInsets.symmetric(vertical: 10, horizontal: 16),
               ),
               onSubmitted: (_) => _sendMessage(),
             ),

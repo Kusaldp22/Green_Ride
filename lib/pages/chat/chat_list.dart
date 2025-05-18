@@ -13,7 +13,7 @@ class ChatListScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.green.shade200,
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         title: Center(
           child: const Text(
             'Messages',
