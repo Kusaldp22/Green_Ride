@@ -26,11 +26,40 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
   bool isLoading = true;
   String? selectedPaymentMethod;
 
+  double avgRating = 0.0;
+  int reviewCount = 0;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _calculateTotalAmount(); // Run after widget has built
+      _calculateTotalAmount();
+      _fetchRatingAndReviewCount();
+    });
+  }
+
+  Future<void> _fetchRatingAndReviewCount() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('ratings')
+        .where('rideId', isEqualTo: widget.ride.id)
+        .get();
+
+    if (snapshot.docs.isEmpty) {
+      setState(() {
+        avgRating = 0.0;
+        reviewCount = 0;
+      });
+      return;
+    }
+
+    double total = 0;
+    for (var doc in snapshot.docs) {
+      total += (doc['rating'] ?? 0).toDouble();
+    }
+
+    setState(() {
+      avgRating = total / snapshot.docs.length;
+      reviewCount = snapshot.docs.length;
     });
   }
 
@@ -222,455 +251,456 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            // Route points
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.location_on,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                    ),
-                    Container(
-                      width: 2,
-                      height: 40,
-                      color: Colors.green.withOpacity(0.5),
-                    ),
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: const BoxDecoration(
-                        color: Colors.green,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.location_on,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              // Route points
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
                     children: [
-                      Text(
-                        widget.ride.location,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        child: const Icon(
+                          Icons.location_on,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ),
-                      const SizedBox(height: 40),
-                      Text(
-                        destination,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
+                      Container(
+                        width: 2,
+                        height: 40,
+                        color: Colors.green.withOpacity(0.5),
+                      ),
+                      Container(
+                        width: 24,
+                        height: 24,
+                        decoration: const BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        child: const Icon(
+                          Icons.location_on,
+                          color: Colors.white,
+                          size: 16,
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            // Car selection card
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.shade100),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          widget.vehicleNumber,
+                          widget.ride.location,
                           style: const TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                            fontWeight: FontWeight.w500,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 40),
                         Text(
-                          'Student ID: ${widget.ride.uniId}',
+                          destination,
                           style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.black54,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: const [
-                            Icon(Icons.star, color: Colors.amber, size: 18),
-                            SizedBox(width: 4),
-                            Text(
-                              '4.9 (531 reviews)',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Image.asset(
-                    _getVehicleImage(widget.ride.vehicleType),
-                    width: 80,
-                  ),
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-            // Charges section
-            const Text(
-              'Charge',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Total Amount',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black54,
-                  ),
+              const SizedBox(height: 24),
+              // Car selection card
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.green.shade100),
                 ),
-                isLoading
-                    ? const CircularProgressIndicator()
-                    : Text(
-                        '\Rs.${totalAmount.toStringAsFixed(2)}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.vehicleNumber,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Student ID: ${widget.ride.uniId}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.star,
+                                  color: Colors.amber, size: 18),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${avgRating.toStringAsFixed(1)} ($reviewCount reviews)',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Image.asset(
+                      _getVehicleImage(widget.ride.vehicleType),
+                      width: 80,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Charges section
+              const Text(
+                'Charge',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Total Amount',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  isLoading
+                      ? const CircularProgressIndicator()
+                      : Text(
+                          '\Rs.${totalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ],
+              ),
+
+              const SizedBox(height: 24),
+
+              // Payment methods
+              const Text(
+                'Select payment method',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // PayPal option
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedPaymentMethod = 'paypal';
+                  });
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: selectedPaymentMethod == 'paypal'
+                          ? Colors.green
+                          : Colors.grey.shade300,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
+                    color: selectedPaymentMethod == 'paypal'
+                        ? Colors.green.shade50
+                        : Colors.white,
+                  ),
+                  child: Row(
+                    children: [
+                      Image.asset('assets/images/paypal.png',
+                          width: 40, height: 40),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'PayPal',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w500),
                         ),
                       ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Payment methods
-            const Text(
-              'Select payment method',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // PayPal option
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedPaymentMethod = 'paypal';
-                });
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: selectedPaymentMethod == 'paypal'
-                        ? Colors.green
-                        : Colors.grey.shade300,
-                    width: 2,
+                      if (selectedPaymentMethod == 'paypal')
+                        const Icon(Icons.check_circle, color: Colors.green),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(8),
-                  color: selectedPaymentMethod == 'paypal'
-                      ? Colors.green.shade50
-                      : Colors.white,
-                ),
-                child: Row(
-                  children: [
-                    Image.asset('assets/images/paypal.png',
-                        width: 40, height: 40),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'PayPal',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                    if (selectedPaymentMethod == 'paypal')
-                      const Icon(Icons.check_circle, color: Colors.green),
-                  ],
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedPaymentMethod = 'cash';
-                });
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  border: Border.all(
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedPaymentMethod = 'cash';
+                  });
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: selectedPaymentMethod == 'cash'
+                          ? Colors.green
+                          : Colors.grey.shade300,
+                      width: 2,
+                    ),
+                    borderRadius: BorderRadius.circular(8),
                     color: selectedPaymentMethod == 'cash'
-                        ? Colors.green
-                        : Colors.grey.shade300,
-                    width: 2,
+                        ? Colors.green.shade50
+                        : Colors.white,
                   ),
-                  borderRadius: BorderRadius.circular(8),
-                  color: selectedPaymentMethod == 'cash'
-                      ? Colors.green.shade50
-                      : Colors.white,
-                ),
-                child: Row(
-                  children: [
-                    Image.asset('assets/images/cash.png',
-                        width: 40, height: 40),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'Cash',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w500),
+                  child: Row(
+                    children: [
+                      Image.asset('assets/images/cash.png',
+                          width: 40, height: 40),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Cash',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
                       ),
-                    ),
-                    if (selectedPaymentMethod == 'cash')
-                      const Icon(Icons.check_circle, color: Colors.green),
-                  ],
+                      if (selectedPaymentMethod == 'cash')
+                        const Icon(Icons.check_circle, color: Colors.green),
+                    ],
+                  ),
                 ),
               ),
-            ),
 
-            const Spacer(),
+              const SizedBox(height: 24),
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.only(bottom: 24),
+                child: ElevatedButton(
+                  onPressed: selectedPaymentMethod == null
+                      ? null
+                      : () async {
+                          try {
+                            setState(() => isLoading = true);
 
-            // Confirm button
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 24),
-              child: ElevatedButton(
-                onPressed: selectedPaymentMethod == null
-                    ? null
-                    : () async {
-                        try {
-                          setState(() => isLoading = true);
+                            // Check if user is logged in
+                            final user = FirebaseAuth.instance.currentUser;
+                            if (user == null) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('User not logged in')),
+                              );
+                              return;
+                            }
+                            // Inside your ElevatedButton onPressed function
+                            if (selectedPaymentMethod == 'paypal') {
+                              try {
+                                // Show loading indicator
+                                setState(() => isLoading = true);
 
-                          // Check if user is logged in
-                          final user = FirebaseAuth.instance.currentUser;
-                          if (user == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('User not logged in')),
-                            );
-                            return;
-                          }
-                          // Inside your ElevatedButton onPressed function
-                          if (selectedPaymentMethod == 'paypal') {
-                            try {
-                              // Show loading indicator
-                              setState(() => isLoading = true);
+                                // Create payment in PayPal
+                                final response =
+                                    await _createPayPalPayment(totalAmount);
 
-                              // Create payment in PayPal
-                              final response =
-                                  await _createPayPalPayment(totalAmount);
-
-                              if (response['status'] == 'success') {
-                                // Launch the PayPal approval URL in a WebView
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => PayPalWebView(
-                                      approvalUrl: response['approvalUrl'],
-                                      paymentId: response['paymentId'],
-                                    ),
-                                  ),
-                                );
-
-                                if (result == 'success') {
-                                  // Payment was successful, update Firestore
-                                  await FirebaseFirestore.instance
-                                      .collection('payments')
-                                      .add({
-                                    'userId':
-                                        FirebaseAuth.instance.currentUser!.uid,
-                                    'driverId': widget.ride.uniId,
-                                    'vehicleNumber': widget.vehicleNumber,
-                                    'paymentMethod': 'paypal',
-                                    'amount': totalAmount,
-                                    'timestamp': Timestamp.now(),
-                                    'pickupLocation': widget.ride.location,
-                                    'destination':
-                                        widget.ride.carName.split(' to ')[1],
-                                    'status': 'completed',
-                                    'paymentId': response['paymentId'],
-                                    'rideId': widget.ride.rideId,
-                                  });
-
-                                  // Show success message
-                                  showDialog(
-                                    context: context,
-                                    builder: (_) => AlertDialog(
-                                      title: const Text('Payment Successful'),
-                                      content: const Text(
-                                          'Your payment was completed successfully.'),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.pop(
-                                                context); // Close dialog
-                                            Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        const HomePage())); // Close current screen
-                                          },
-                                          child: const Text('OK'),
-                                        ),
-                                      ],
+                                if (response['status'] == 'success') {
+                                  // Launch the PayPal approval URL in a WebView
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => PayPalWebView(
+                                        approvalUrl: response['approvalUrl'],
+                                        paymentId: response['paymentId'],
+                                      ),
                                     ),
                                   );
+
+                                  if (result == 'success') {
+                                    // Payment was successful, update Firestore
+                                    await FirebaseFirestore.instance
+                                        .collection('payments')
+                                        .add({
+                                      'userId': FirebaseAuth
+                                          .instance.currentUser!.uid,
+                                      'driverId': widget.ride.uniId,
+                                      'vehicleNumber': widget.vehicleNumber,
+                                      'paymentMethod': 'paypal',
+                                      'amount': totalAmount,
+                                      'timestamp': Timestamp.now(),
+                                      'pickupLocation': widget.ride.location,
+                                      'destination':
+                                          widget.ride.carName.split(' to ')[1],
+                                      'status': 'completed',
+                                      'paymentId': response['paymentId'],
+                                      'rideId': widget.ride.rideId,
+                                    });
+
+                                    // Show success message
+                                    showDialog(
+                                      context: context,
+                                      builder: (_) => AlertDialog(
+                                        title: const Text('Payment Successful'),
+                                        content: const Text(
+                                            'Your payment was completed successfully.'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () {
+                                              Navigator.pop(
+                                                  context); // Close dialog
+                                              Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                      builder: (context) =>
+                                                          const HomePage())); // Close current screen
+                                            },
+                                            child: const Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  } else {
+                                    // Payment was cancelled or failed
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text(
+                                              'Payment was not completed')),
+                                    );
+                                  }
                                 } else {
-                                  // Payment was cancelled or failed
+                                  // Show error message
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content:
-                                            Text('Payment was not completed')),
+                                    SnackBar(
+                                        content: Text(
+                                            'Error: ${response['error']}')),
                                   );
                                 }
-                              } else {
-                                // Show error message
+
+                                setState(() => isLoading = false);
+                              } catch (e) {
+                                setState(() => isLoading = false);
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content:
-                                          Text('Error: ${response['error']}')),
+                                  SnackBar(content: Text('Error: $e')),
                                 );
                               }
+                            } else if (selectedPaymentMethod == 'cash') {
+                              // Handle cash payment
+                              try {
+                                // Add payment record to Firestore
+                                await FirebaseFirestore.instance
+                                    .collection('payments')
+                                    .add({
+                                  'userId':
+                                      FirebaseAuth.instance.currentUser!.uid,
+                                  'driverId': widget.ride.uniId,
+                                  'vehicleNumber': widget.vehicleNumber,
+                                  'paymentMethod': 'cash',
+                                  'amount': totalAmount,
+                                  'timestamp': Timestamp.now(),
+                                  'pickupLocation': widget.ride.location,
+                                  'destination':
+                                      widget.ride.carName.split(' to ')[1],
+                                  'status':
+                                      'pending', // Cash payment is pending until received
+                                  'rideId': widget.ride.rideId,
+                                });
 
-                              setState(() => isLoading = false);
-                            } catch (e) {
-                              setState(() => isLoading = false);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: $e')),
-                              );
+                                // Show success message
+                                showDialog(
+                                  context: context,
+                                  builder: (_) => AlertDialog(
+                                    title: const Text('Ride Confirmed'),
+                                    content: const Text(
+                                        'Your ride has been confirmed. Please pay the driver in cash.'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () {
+                                          // Navigator.pop(context); // Close dialog
+                                          Navigator.push(context,
+                                              MaterialPageRoute(
+                                                  builder: (context) {
+                                            return const HomePage();
+                                          })); // Close current screen
+                                        },
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Error: $e')),
+                                );
+                              }
                             }
-                          } else if (selectedPaymentMethod == 'cash') {
-                            // Handle cash payment
-                            try {
-                              // Add payment record to Firestore
-                              await FirebaseFirestore.instance
-                                  .collection('payments')
-                                  .add({
-                                'userId':
-                                    FirebaseAuth.instance.currentUser!.uid,
-                                'driverId': widget.ride.uniId,
-                                'vehicleNumber': widget.vehicleNumber,
-                                'paymentMethod': 'cash',
-                                'amount': totalAmount,
-                                'timestamp': Timestamp.now(),
-                                'pickupLocation': widget.ride.location,
-                                'destination':
-                                    widget.ride.carName.split(' to ')[1],
-                                'status':
-                                    'pending', // Cash payment is pending until received
-                                'rideId': widget.ride.rideId,
-                              });
 
-                              // Show success message
-                              showDialog(
-                                context: context,
-                                builder: (_) => AlertDialog(
-                                  title: const Text('Ride Confirmed'),
-                                  content: const Text(
-                                      'Your ride has been confirmed. Please pay the driver in cash.'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        // Navigator.pop(context); // Close dialog
-                                        Navigator.push(context,
-                                            MaterialPageRoute(
-                                                builder: (context) {
-                                          return const HomePage();
-                                        })); // Close current screen
-                                      },
-                                      child: const Text('OK'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Error: $e')),
-                              );
-                            }
+                            setState(() => isLoading = false);
+                          } catch (e) {
+                            setState(() => isLoading = false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')),
+                            );
                           }
-
-                          setState(() => isLoading = false);
-                        } catch (e) {
-                          setState(() => isLoading = false);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $e')),
-                          );
-                        }
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Confirm Ride',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                  child: const Text(
+                    'Confirm Ride',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

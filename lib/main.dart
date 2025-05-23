@@ -4,10 +4,13 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:green_ride/authentication/login.dart';
+import 'package:green_ride/onboard/start.dart';
 import 'package:green_ride/pages/bottom_nav/dashboard.dart';
 import 'package:green_ride/pages/bottom_nav/home.dart';
 import 'package:green_ride/splash_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -62,6 +65,16 @@ class _AuthCheckerState extends State<AuthChecker> {
   }
 
   Future<void> _checkUserStatus() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
+
+    if (isFirstLaunch) {
+      await prefs.setBool('isFirstLaunch', false);
+      setState(() {
+        _initialScreen = const StartScreen(); 
+      });
+      return;
+    }
     User? user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
