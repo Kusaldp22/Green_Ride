@@ -18,6 +18,9 @@ class RideModel {
   final GeoPoint? startLatLng;
   final GeoPoint? endLatLng;
   String status;
+  final String? name;
+  final String? gender;
+  final String? studentId;
 
   RideModel({
     required this.id,
@@ -37,6 +40,9 @@ class RideModel {
     this.status = 'pending',
     this.startLatLng,
     this.endLatLng,
+    this.name,
+    this.gender,
+    this.studentId,
   });
 
   bool get isFull => (joinedUsers?.length ?? 0) >= seats;
@@ -65,6 +71,9 @@ class RideModel {
       status: data['status'] ?? 'pending',
       startLatLng: data['start_location'],
       endLatLng: data['end_location'],
+      name: data['name'],
+      gender: data['gender'],
+      studentId: data['student_id'],
     );
   }
 
@@ -85,6 +94,9 @@ class RideModel {
       'status': status,
       'start_location': startLatLng,
       'end_location': endLatLng,
+      'name': name,
+      'gender': gender,
+      'student_id': studentId,
     };
   }
 }

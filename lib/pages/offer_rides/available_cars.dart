@@ -186,8 +186,37 @@ class _AvailableRidesScreenState extends State<AvailableRidesScreen> {
                       title: Text(ride.carName,
                           style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold)),
-                      subtitle: Text(
-                          '${ride.type} | $availableSeats seats left | ⭐ $avgRating'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                              '${ride.type} | $availableSeats seats left | ⭐ $avgRating'),
+                          const SizedBox(height: 5),
+                          Center(
+                            child: Text(
+                              "Rider's Friend's Details",
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  color:
+                                      const Color.fromARGB(255, 5, 111, 197)),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 5,
+                          ),
+                          if (ride.name != null && ride.name!.isNotEmpty)
+                            Text('Name: ${ride.name!}',
+                                style: const TextStyle(fontSize: 13)),
+                          if (ride.gender != null && ride.gender!.isNotEmpty)
+                            Text('Gender: ${ride.gender!}',
+                                style: const TextStyle(fontSize: 13)),
+                          if (ride.studentId != null &&
+                              ride.studentId!.isNotEmpty)
+                            Text('Student ID: ${ride.studentId!}',
+                                style: const TextStyle(fontSize: 13)),
+                        ],
+                      ),
                       trailing: isUserRide
                           ? const SizedBox.shrink()
                           : isJoined
