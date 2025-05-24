@@ -122,7 +122,7 @@ class OnboardScreen3 extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              const WelcomeScreen(), // Create your main app screen
+                              const WelcomeScreen(), 
                         ),
                       );
                     },

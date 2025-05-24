@@ -13,7 +13,7 @@ class OnboardScreen2 extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Top bar with time and skip button
+            
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -26,7 +26,7 @@ class OnboardScreen2 extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              const WelcomeScreen(), // Create this screen for the next page
+                              const WelcomeScreen(), 
                         ),
                       );
                     },
@@ -54,7 +54,7 @@ class OnboardScreen2 extends StatelessWidget {
                       height: 300,
                       child: Stack(
                         children: [
-                          // Add your custom illustration here
+                          
                           Center(
                             child: Image.asset(
                               'assets/images/onboard2.png',
@@ -142,7 +142,7 @@ class OnboardScreen2 extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              const OnboardScreen3(), // Create this screen for the next page
+                              const OnboardScreen3(), 
                         ),
                       );
                     },

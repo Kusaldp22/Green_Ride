@@ -39,7 +39,7 @@ class _ShareRideScreenState extends State<ShareRideScreen> {
   List<dynamic> destinationLocationSuggestions = [];
   String startSessionToken = '';
   String destinationSessionToken = '';
-  bool isSearchingStart = true; // To track which field is being searched
+  bool isSearchingStart = true; 
   bool _isLoading = false;
 
   @override

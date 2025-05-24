@@ -112,9 +112,9 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
           ],
           'redirect_urls': {
             'return_url':
-                'https://example.com/success', // Replace with your app's success URL
+                'https://example.com/success', 
             'cancel_url':
-                'https://example.com/cancel', // Replace with your app's cancel URL
+                'https://example.com/cancel', 
           },
         }),
       );
@@ -533,7 +533,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
                               );
                               return;
                             }
-                            // Inside your ElevatedButton onPressed function
+                            
                             if (selectedPaymentMethod == 'paypal') {
                               try {
                                 // Show loading indicator

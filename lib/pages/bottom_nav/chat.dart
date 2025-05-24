@@ -5,7 +5,7 @@ class Chat extends StatefulWidget {
   final String passengerId;
   final String passengerName;
   final String? passengerImage;
-  final String currentUserId; // The logged-in user (driver or passenger)
+  final String currentUserId; 
 
   const Chat({
     super.key,
@@ -99,7 +99,7 @@ class _ChatState extends State<Chat> {
           .collection('messages')
           .add(message);
 
-      // Update chat doc with last message, time, and increment unread for other user
+      
       final otherUserId = widget.passengerId;
       await FirebaseFirestore.instance.collection('chats').doc(_chatId).set({
         'participants': [widget.currentUserId, widget.passengerId],

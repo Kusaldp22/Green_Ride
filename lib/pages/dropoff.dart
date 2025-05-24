@@ -220,7 +220,7 @@ class _RideScreenState extends State<RideScreen> {
                 ),
               ),
               onPressed: () async {
-                // 🔁 UPDATE RIDE STATUS BEFORE NAVIGATING
+                
                 try {
                   await FirebaseFirestore.instance
                       .collection('offered_rides')

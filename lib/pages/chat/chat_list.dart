@@ -28,7 +28,7 @@ class ChatListScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.search, color: Colors.black),
             onPressed: () {
-              // Implement search functionality
+              
             },
           ),
         ],
@@ -288,7 +288,7 @@ class ChatListView extends StatelessWidget {
               final unreadCount =
                   data['unreadCount_$currentUserId'] as int? ?? 0;
 
-              // Fetch other user's data from Realtime Database (keep this unchanged)
+              // Fetch other user's data from Realtime Database 
               return FutureBuilder<DataSnapshot>(
                 future: FirebaseDatabase.instance
                     .ref()

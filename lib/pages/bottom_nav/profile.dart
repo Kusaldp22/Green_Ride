@@ -158,7 +158,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return _isLoading
-        ? const SplashScreen1() // Show SplashScreen1() while loading
+        ? const SplashScreen1() 
         : Scaffold(
             backgroundColor: Colors.white,
             body: SafeArea(

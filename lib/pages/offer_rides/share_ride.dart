@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'available_cars.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // Add this import
+import 'package:flutter_dotenv/flutter_dotenv.dart'; 
 
 class PlanRideScreen extends StatefulWidget {
   const PlanRideScreen({Key? key}) : super(key: key);
@@ -23,13 +23,13 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
   List<dynamic> destinationLocationSuggestions = [];
   String startSessionToken = '';
   String destinationSessionToken = '';
-  bool isSearchingStart = true; // To track which field is being searched
+  bool isSearchingStart = true; 
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    // We won't set up listeners in initState to avoid automatic API calls
+    
   }
 
   @override

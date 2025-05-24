@@ -74,7 +74,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<void> _submitForm() async {
-    if (!_formKey.currentState!.validate()) return; // Ensure fields are valid
+    if (!_formKey.currentState!.validate()) return; 
 
     bool hasInternet = await CommonMethods.checkInternetConnection(context);
     if (!hasInternet) return;
@@ -131,8 +131,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   Future<bool> _checkEmailVerification(User user) async {
-    await user.reload(); // Refresh user data
-    User? updatedUser = FirebaseAuth.instance.currentUser; // Get updated user
+    await user.reload(); 
+    User? updatedUser = FirebaseAuth.instance.currentUser; 
     return updatedUser?.emailVerified ?? false;
   }
 
@@ -284,7 +284,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       controller: controller,
       keyboardType: keyboardType,
       decoration: _inputDecoration(hint),
-      validator: validator, // Add validation logic here
+      validator: validator, 
     );
   }
 

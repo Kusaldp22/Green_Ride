@@ -278,7 +278,7 @@ class _RideScreenState extends State<RideScreen> {
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('payments')
           .where('rideId',
-              isEqualTo: widget.ride.rideId) // rideId from your RideModel
+              isEqualTo: widget.ride.rideId) 
           .get();
 
       double total = 0.0;
@@ -336,7 +336,7 @@ class _RideScreenState extends State<RideScreen> {
           driverImage: userProfileImage,
           currentUserId: currentUserId,
 
-          // currentUserId: Get your current user ID from your auth system
+          
         ),
       ),
     );
@@ -354,7 +354,7 @@ class _RideScreenState extends State<RideScreen> {
                 ? GoogleMap(
                     initialCameraPosition: CameraPosition(
                       target: startLocation ?? LatLng(0, 0), // fallback if null
-                      zoom: _calculateInitialZoom(), // Add this method
+                      zoom: _calculateInitialZoom(), 
                     ),
                     polylines: polylines,
                     markers: {
@@ -558,7 +558,7 @@ class _RideScreenState extends State<RideScreen> {
                   ),
                 ),
 
-                // Add this in your bottom sheet Column, after the Payment Method row
+                
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16.0, vertical: 8.0),

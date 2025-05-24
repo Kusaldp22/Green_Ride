@@ -50,7 +50,7 @@ class _VerifyIdentityScreenState extends State<VerifyIdentityScreen>
       final isDeviceSupported = await _localAuth.isDeviceSupported();
       final availableBiometrics = await _localAuth.getAvailableBiometrics();
 
-      // ✅ Only call setState if the widget is still in the tree
+      
       if (mounted) {
         setState(() {
           _canCheckBiometrics = canCheck;
@@ -295,9 +295,9 @@ class FaceRecognitionPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Calculate the actual image bounds (assuming the image is centered)
+    // Calculate the actual image bounds
     final imageWidth =
-        size.width * 0.8; // Adjust these values based on your image
+        size.width * 0.8; 
     final imageHeight = size.height * 0.8;
     final imageLeft = (size.width - imageWidth) / 2;
     final imageTop = (size.height - imageHeight) / 2;

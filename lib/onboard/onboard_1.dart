@@ -27,7 +27,7 @@ class OnboardScreen1 extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              const WelcomeScreen(), // Create this screen for the next page
+                              const WelcomeScreen(), 
                         ),
                       );
                     },
@@ -55,7 +55,7 @@ class OnboardScreen1 extends StatelessWidget {
                       height: 300,
                       child: Stack(
                         children: [
-                          // Add your custom illustration here
+                          
                           Center(
                             child: Image.asset(
                               'assets/images/onboard1.png',
@@ -144,7 +144,7 @@ class OnboardScreen1 extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              const OnboardScreen2(), // Create this screen for the next page
+                              const OnboardScreen2(), 
                         ),
                       );
                     },
