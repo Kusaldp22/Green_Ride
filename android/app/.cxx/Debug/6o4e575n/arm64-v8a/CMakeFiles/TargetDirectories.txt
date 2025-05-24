@@ -1,0 +1,2 @@
+C:/Users/Kusal/Desktop/New folder (2)/Green_Ride/android/app/.cxx/Debug/6o4e575n/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/Kusal/Desktop/New folder (2)/Green_Ride/android/app/.cxx/Debug/6o4e575n/arm64-v8a/CMakeFiles/rebuild_cache.dir

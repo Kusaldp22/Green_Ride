@@ -49,7 +49,7 @@ class _DashboardState extends State<Dashboard>
           const HomePage(),
           Ratings(),
           const Trips(),
-          const ChatListScreen(), // ✅ replaces static Chat screen
+          const ChatListScreen(), 
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

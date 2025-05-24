@@ -8,6 +8,7 @@ import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Add this import
 
 class ShareRideScreen extends StatefulWidget {
   const ShareRideScreen({super.key});
@@ -75,7 +76,7 @@ class _ShareRideScreenState extends State<ShareRideScreen> {
     });
 
     try {
-      const String apiKey = "AIzaSyCbYzpGVw5np6Rr_aHfHiz3ycTag0ILVZA";
+      final String apiKey = dotenv.env['API_KEY'] ?? '';
       const String baseUrl =
           "https://maps.googleapis.com/maps/api/place/autocomplete/json";
 
@@ -121,7 +122,7 @@ class _ShareRideScreenState extends State<ShareRideScreen> {
     });
 
     try {
-      const String apiKey = "AIzaSyCbYzpGVw5np6Rr_aHfHiz3ycTag0ILVZA";
+      final String apiKey = dotenv.env['API_KEY'] ?? '';
       final response = await http.get(
         Uri.parse(
           'https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${Uri.encodeComponent(placeDescription)}&inputtype=textquery&fields=geometry&key=$apiKey',

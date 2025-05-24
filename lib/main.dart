@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:green_ride/authentication/login.dart';
 import 'package:green_ride/onboard/start.dart';
 import 'package:green_ride/pages/bottom_nav/dashboard.dart';
@@ -11,15 +12,16 @@ import 'package:green_ride/splash_screen.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   // Optionally handle background notification
   print('Handling a background message: ${message.messageId}');
 }
-void main() async {
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await dotenv.load(fileName: ".env"); 
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -71,7 +73,7 @@ class _AuthCheckerState extends State<AuthChecker> {
     if (isFirstLaunch) {
       await prefs.setBool('isFirstLaunch', false);
       setState(() {
-        _initialScreen = const StartScreen(); 
+        _initialScreen = const StartScreen();
       });
       return;
     }

@@ -8,6 +8,7 @@ import 'package:green_ride/pages/chat/chat_screen.dart';
 import 'package:green_ride/pages/offer_rides/ride_model.dart';
 import 'package:green_ride/pages/reviews.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; 
 
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -128,7 +129,7 @@ class _RideScreenState extends State<RideScreen> {
   Future<void> _getPolylinePoints() async {
     if (startLocation == null || endLocation == null) return;
 
-    const String apiKey = "AIzaSyBk1wlKR68wI-IDMzsbLPf1YiEZCetZDHU";
+    final String apiKey = dotenv.env['API_KEY'] ?? '';
     final String url =
         "https://maps.googleapis.com/maps/api/directions/json?origin=${startLocation!.latitude},${startLocation!.longitude}&destination=${endLocation!.latitude},${endLocation!.longitude}&key=$apiKey";
 

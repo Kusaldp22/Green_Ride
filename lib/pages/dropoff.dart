@@ -12,6 +12,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; 
 
 class DropoffScreen extends StatelessWidget {
   final RideModel ride;
@@ -115,7 +116,7 @@ class _RideScreenState extends State<RideScreen> {
   Future<void> _getPolylinePoints() async {
     if (startLocation == null || endLocation == null) return;
 
-    const String apiKey = "AIzaSyBk1wlKR68wI-IDMzsbLPf1YiEZCetZDHU";
+    final String apiKey = dotenv.env['API_KEY'] ?? '';
     final String url =
         "https://maps.googleapis.com/maps/api/directions/json?origin=${startLocation!.latitude},${startLocation!.longitude}&destination=${endLocation!.latitude},${endLocation!.longitude}&key=$apiKey";
 

@@ -3,7 +3,8 @@ import 'package:uuid/uuid.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'available_cars.dart'; // Import AvailableRidesScreen
+import 'available_cars.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Add this import
 
 class PlanRideScreen extends StatefulWidget {
   const PlanRideScreen({Key? key}) : super(key: key);
@@ -15,7 +16,7 @@ class PlanRideScreen extends StatefulWidget {
 class _PlanRideScreenState extends State<PlanRideScreen> {
   final TextEditingController startController = TextEditingController();
   final TextEditingController destinationController = TextEditingController();
-  
+
   // Location autocomplete properties
   var uuid = const Uuid();
   List<dynamic> startLocationSuggestions = [];
@@ -57,17 +58,20 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
     } else if (!isStart && destinationSessionToken.isEmpty) {
       destinationSessionToken = uuid.v4();
     }
-    
+
     setState(() {
       _isLoading = true;
     });
 
     try {
-      const String apiKey = "AIzaSyCbYzpGVw5np6Rr_aHfHiz3ycTag0ILVZA";
-      const String baseUrl = "https://maps.googleapis.com/maps/api/place/autocomplete/json";
-      
-      String sessionToken = isStart ? startSessionToken : destinationSessionToken;
-      String requestUrl = '$baseUrl?input=$input&key=$apiKey&sessiontoken=$sessionToken';
+      final String apiKey = dotenv.env['API_KEY'] ?? '';
+      const String baseUrl =
+          "https://maps.googleapis.com/maps/api/place/autocomplete/json";
+
+      String sessionToken =
+          isStart ? startSessionToken : destinationSessionToken;
+      String requestUrl =
+          '$baseUrl?input=$input&key=$apiKey&sessiontoken=$sessionToken';
 
       var response = await http.get(Uri.parse(requestUrl));
       var data = json.decode(response.body);
@@ -83,7 +87,8 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
         });
       } else {
         if (kDebugMode) {
-          print("Error: ${data['status']} - ${data['error_message'] ?? 'Unknown error'}");
+          print(
+              "Error: ${data['status']} - ${data['error_message'] ?? 'Unknown error'}");
         }
         setState(() {
           _isLoading = false;
@@ -103,17 +108,17 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
     if (isStart) {
       setState(() {
         startController.text = placeDescription;
-        startLocationSuggestions = [];  // Clear suggestions
+        startLocationSuggestions = []; // Clear suggestions
         startSessionToken = '';
       });
     } else {
       setState(() {
         destinationController.text = placeDescription;
-        destinationLocationSuggestions = [];  // Clear suggestions
+        destinationLocationSuggestions = []; // Clear suggestions
         destinationSessionToken = '';
       });
     }
-    
+
     // Hide keyboard
     FocusScope.of(context).unfocus();
   }
@@ -262,7 +267,7 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                   ],
                 ),
               ),
-              
+
               // Location suggestions
               if (_isLoading)
                 const Padding(
@@ -286,19 +291,24 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                     ),
                     child: ListView.separated(
                       shrinkWrap: true,
-                      separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.shade300),
+                      separatorBuilder: (context, index) =>
+                          Divider(height: 1, color: Colors.grey.shade300),
                       itemCount: startLocationSuggestions.length,
                       itemBuilder: (context, index) {
                         return ListTile(
                           dense: true,
                           title: Text(
                             startLocationSuggestions[index]['description'],
-                            style: const TextStyle(color: Colors.black), // Custom font color
+                            style: const TextStyle(
+                                color: Colors.black), // Custom font color
                           ),
                           onTap: () {
                             // Use Future.delayed to ensure the UI can update
                             Future.microtask(() {
-                              selectLocation(startLocationSuggestions[index]['description'], true);
+                              selectLocation(
+                                  startLocationSuggestions[index]
+                                      ['description'],
+                                  true);
                             });
                           },
                         );
@@ -306,7 +316,8 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                     ),
                   ),
                 )
-              else if (destinationLocationSuggestions.isNotEmpty && !isSearchingStart)
+              else if (destinationLocationSuggestions.isNotEmpty &&
+                  !isSearchingStart)
                 Expanded(
                   child: Container(
                     margin: const EdgeInsets.only(top: 4),
@@ -323,19 +334,25 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                     ),
                     child: ListView.separated(
                       shrinkWrap: true,
-                      separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.shade300),
+                      separatorBuilder: (context, index) =>
+                          Divider(height: 1, color: Colors.grey.shade300),
                       itemCount: destinationLocationSuggestions.length,
                       itemBuilder: (context, index) {
                         return ListTile(
                           dense: true,
                           title: Text(
-                            destinationLocationSuggestions[index]['description'],
-                            style: const TextStyle(color: Colors.black), // Custom font color
+                            destinationLocationSuggestions[index]
+                                ['description'],
+                            style: const TextStyle(
+                                color: Colors.black), // Custom font color
                           ),
                           onTap: () {
                             // Use Future.delayed to ensure the UI can update
                             Future.microtask(() {
-                              selectLocation(destinationLocationSuggestions[index]['description'], false);
+                              selectLocation(
+                                  destinationLocationSuggestions[index]
+                                      ['description'],
+                                  false);
                             });
                           },
                         );
@@ -345,7 +362,7 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                 )
               else
                 const Spacer(),
-                
+
               // Search Button
               SizedBox(
                 width: double.infinity,
@@ -355,7 +372,7 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                     clearAllSuggestions();
                     String start = startController.text.trim();
                     String destination = destinationController.text.trim();
-                    
+
                     if (start.isNotEmpty && destination.isNotEmpty) {
                       Navigator.push(
                         context,
@@ -369,7 +386,8 @@ class _PlanRideScreenState extends State<PlanRideScreen> {
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text("Please enter both Start and Destination"),
+                          content:
+                              Text("Please enter both Start and Destination"),
                           backgroundColor: Colors.red,
                         ),
                       );

@@ -6,6 +6,7 @@ import 'package:green_ride/pages/offer_rides/ride_model.dart';
 import 'package:green_ride/pages/payments/paypal.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart'; 
 
 class ConfirmationScreen extends StatefulWidget {
   final RideModel ride;
@@ -65,10 +66,8 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
 
   Future<Map<String, dynamic>> _createPayPalPayment(double amount) async {
     // Step 1: Get OAuth token
-    final String clientId =
-        'AX20PP2ceh8OyTGs_nJO1nJ5Sj9ZmRv0MfNiIhAYdTYNFMQYX5LdZ5QPrciXtuBpnlmKvcsdAJW_LNg8';
-    final String secret =
-        'EKnTpojSQK9orOpYlMZE0q0rIDi0bU147zFTahQbtTqPAMhf8NpjXBY5GAdD26aTzRSTLfUrtfos-ZyG';
+    final String clientId = dotenv.env['PAYPAL_CLIENT_ID'] ?? '';
+    final String secret = dotenv.env['PAYPAL_SECRET'] ?? '';
 
     try {
       // Get access token first
@@ -182,7 +181,7 @@ class _ConfirmationScreenState extends State<ConfirmationScreen> {
   }
 
   Future<void> _calculateTotalAmount() async {
-    const String apiKey = 'AIzaSyBk1wlKR68wI-IDMzsbLPf1YiEZCetZDHU';
+    final String apiKey = dotenv.env['API_KEY'] ?? '';
     const double costPerKm = 40; // Cost per kilometer
 
     try {
